@@ -1,0 +1,13 @@
+    dayEl.innerHTML = `
+      <div class="daily__day-title">${dayName}</div>
+     <img
+        class="daily__day-icon"
+        src="/assets/images/icons/icon-sunny.webp"
+        alt=""
+        aria-hidden="true"
+      />
+      <div class="daily__day-temps">
+        <span class="daily__day-high">${maxTemp}${unitSymbol}</span>
+        <span class="daily__day-low">${minTemp}${unitSymbol}</span>
+      </div>
+    `;

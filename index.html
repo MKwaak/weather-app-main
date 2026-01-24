@@ -43,21 +43,17 @@
         </a>
 
         <div class="header__units">
-          <img
-            src="/assets/images/icon-units.svg"
-            alt=""
-            class="header__units-icon"
-            aria-hidden="true"
-          />
-
           <label for="ddlUnits" class="visually-hidden"
             >Temperature units</label
           >
-          <select class="header__dropdown" name="units" id="ddlUnits">
-            <option value="">Units</option>
-            <option value="C">Celsius</option>
-            <option value="F">Fahrenheit</option>
-          </select>
+
+          <div class="header__select">
+            <select class="header__dropdown" name="units" id="ddlUnits">
+              <option value="">Units</option>
+              <option value="C">Celsius</option>
+              <option value="F">Fahrenheit</option>
+            </select>
+          </div>
         </div>
       </div>
     </header>
@@ -69,21 +65,12 @@
 
           <form class="hero__search">
             <label for="search" class="visually-hidden">Search Location</label>
-
             <input
               type="text"
               id="search"
-              placeholder="Search for a place..."
-            />
-            <!--
-            <input
               class="hero__textbox"
-              type="text"
-              name="search"
-              id="search"
               placeholder="Search for a place..."
             />
-            -->
             <button class="hero__button" type="submit">Search</button>
           </form>
         </div>
@@ -144,106 +131,7 @@
 
         <section class="daily">
           <h2 class="section__title daily__title">Daily Forecast</h2>
-          <div class="daily__forecast">
-            <div class="block daily__day">
-              <p class="daily__day-title">Tue</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Wed</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Thu</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Fri</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Sat</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Sun</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-            <div class="block daily__day">
-              <p class="daily__day-title">Mon</p>
-              <img
-                class="daily__day-icon"
-                src="/assets/images/icon-rain.webp"
-                alt=""
-                width="320"
-                height="320"
-              />
-              <div class="daily__day-temps">
-                <p class="daily__day-high">20°C</p>
-                <p class="daily__day-low">14°C</p>
-              </div>
-            </div>
-          </div>
+          <div class="daily__forecast" id="dailyForecast"></div>
         </section>
 
         <section class="hourly">
