@@ -21,14 +21,43 @@ async function getGeoData(search) {
     if (!response.ok) throw new Error(`Response status: ${response.status}`);
 
     const result = await response.json();
-    if (!result[0]) throw new Error("City not found");
+    if (!result || result.length === 0) throw new Error("City not found");
 
-    const { lat, lon } = result[0];
-    currentLat = lat;
-    currentLon = lon;
+    // 🔍 Debug: inspect all returned locations
+    console.table(
+      result.map((r) => ({
+        display_name: r.display_name,
+        country: r.address?.country ?? "(unknown)",
+        country_code: r.address?.country_code ?? "(unknown)",
+        state: r.address?.state ?? "(unknown)",
+        city:
+          r.address?.city ||
+          r.address?.town ||
+          r.address?.village ||
+          r.address?.municipality ||
+          "(unknown)",
+        lat: r.lat,
+        lon: r.lon,
+      })),
+    );
 
-    loadLocationData(result);
-    getWeatherData(lat, lon);
+    // Phase 1: pick **first result** as default
+    const selected = result[0];
+
+    if (!selected || !selected.lat || !selected.lon) {
+      console.warn(
+        "No valid coordinates returned, using default city (Rotterdam).",
+      );
+      currentLat = 51.9244; // Rotterdam
+      currentLon = 4.4777;
+    } else {
+      currentLat = selected.lat;
+      currentLon = selected.lon;
+    }
+
+    // 🔹 Load location and weather
+    loadLocationData(result); // optional: show full list to user later
+    getWeatherData(currentLat, currentLon);
   } catch (error) {
     console.error(error.message);
     alert("City not found. Please try again.");
@@ -39,7 +68,22 @@ async function getGeoData(search) {
 function loadLocationData(locationData) {
   const location = locationData[0].address;
   const city =
-    location.city || location.town || location.village || location.state;
+    location.city ||
+    location.town ||
+    location.village ||
+    location.municipality ||
+    location.province || // 👈 Tokyo lives here
+    location.state ||
+    location.county ||
+    location.region ||
+    location.state_district ||
+    location.city_district ||
+    location.suburb ||
+    "Unknown location";
+
+  console.log("Address object:", location);
+  console.log("Tokyo address:", location);
+
   const country = location.country_code.toUpperCase();
 
   const date = new Intl.DateTimeFormat("en-US", {
@@ -55,7 +99,7 @@ function loadLocationData(locationData) {
 
 // Load weather data
 async function getWeatherData(lat, lon) {
-  // Determine units
+  // 1️⃣ Units
   let tempUnit = "celsius";
   let windUnit = "kmh";
   let precipUnit = "mm";
@@ -68,29 +112,52 @@ async function getWeatherData(lat, lon) {
     unitSymbol = "°F";
   }
 
-  // Fetch weather data
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}&precipitation_unit=${precipUnit}&timezone=auto`;
+  // 2️⃣ Build API URL
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}&precipitation_unit=${precipUnit}&timezone=auto`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Response status: ${response.status}`);
 
     const result = await response.json();
-    console.log(result.daily.weather_code);
+    console.log("Weather API result:", result);
 
-    //console.log("Local date:", new Date().toDateString());
-    //console.log("Daily[0]:", result.daily.time[0]);
+    if (!result.daily || !result.hourly) {
+      console.warn("No daily/hourly data available");
+      return;
+    }
 
-    // Current weather
-    const current = result.current_weather;
+    // 3️⃣ Current weather (use API or fallback to closest hour)
+    const current =
+      result.current_weather ??
+      (() => {
+        const now = new Date();
+        let closestIndex = 0;
+
+        result.hourly.time.forEach((t, i) => {
+          const diffNow = Math.abs(new Date(t) - now);
+          const diffClosest = Math.abs(
+            new Date(result.hourly.time[closestIndex]) - now,
+          );
+          if (diffNow < diffClosest) closestIndex = i;
+        });
+
+        return {
+          temperature: result.hourly.temperature_2m[closestIndex],
+          windspeed: result.hourly.wind_speed_10m[closestIndex], // ⚡ correct property
+          weathercode: result.hourly.weather_code[closestIndex],
+          time: result.hourly.time[closestIndex],
+        };
+      })();
+
+    // 4️⃣ Extract current weather details safely
     const temp = current.temperature ?? 0;
-    const windSpeed = current.wind_speed ?? 0;
-
+    const windSpeed = current.windspeed ?? 0; // ⚡ now works
     const feelsLike = result.hourly.apparent_temperature?.[0] ?? temp;
     const humidity = result.hourly.relative_humidity_2m?.[0] ?? 0;
     const precipitation = result.hourly.precipitation?.[0] ?? 0;
 
-    // Update DOM "DOM = Document Object Model, a tree of objects that javascript can read"
+    // 5️⃣ Update DOM
     divCurrentTemp.innerHTML = `<span>${Math.round(temp)}</span>${unitSymbol}`;
     document.getElementById("feels-like").textContent =
       `${Math.round(feelsLike)}${unitSymbol}`;
@@ -101,15 +168,11 @@ async function getWeatherData(lat, lon) {
     document.getElementById("precipitation").textContent =
       `${Math.round(precipitation)} ${precipUnit}`;
 
-    // Step 1: pass current weather to daily forecast
-    console.log("before renderDailyForecast");
+    // 6️⃣ Render daily & hourly forecasts
     renderDailyForecast(result.daily, unitSymbol, current);
-    console.log("after renderDailyForecast");
-
-    // TODO: update daily and hourly forecast dynamically
-    //renderDailyForecast(result.daily, unitSymbol);
+    renderHourlyForecast(result, unitSymbol);
   } catch (error) {
-    console.error(error.message);
+    console.error("Weather error:", error);
   }
 }
 
@@ -126,9 +189,16 @@ ddlUnits.addEventListener("change", () => {
   }
 });
 
+// Step 1: pass current weather to daily forecast [rendering function]
+// 1️⃣ Grab the container for daily forecast boxes
+// 2️⃣ Clear old daily forecast HTML
+// 3️⃣ Loop through daily.time array (max 7 days)
+// 4️⃣ For Day 1, use currentWeather for temperature and icon
+// 5️⃣ For subsequent days, use daily array values from API
+// 6️⃣ Create the HTML for each day and append to container
+
 function renderDailyForecast(daily, unitSymbol, currentWeather) {
   const dailyContainer = document.getElementById("dailyForecast");
-
   console.log("daily container:", dailyContainer);
 
   dailyContainer.innerHTML = ""; // clear old data
@@ -179,6 +249,88 @@ function renderDailyForecast(daily, unitSymbol, currentWeather) {
     dailyContainer.appendChild(dayEl);
   });
 }
+// Hourly forecast
+function renderHourlyForecast(result, unitSymbol) {
+  // 1️⃣ Grab the container
+  const hourlyContainer = document.getElementById("hourlyForecast");
+  const hourlyDaySelect = document.getElementById("hourlyDay");
+
+  // 2️⃣ Clear old data
+  hourlyContainer.innerHTML = "";
+  hourlyDaySelect.innerHTML = "";
+
+  // 🔹 Find the index of the current hour
+  const now = new Date(result.current_weather.time);
+  let startIndex = 0;
+
+  for (let i = 0; i < result.hourly.time.length; i++) {
+    const hourTime = new Date(result.hourly.time[i]);
+    if (hourTime >= now) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  // 🔹 Step 0: update dropdown with current day
+  const firstHour = new Date(result.hourly.time[startIndex]);
+  const weekdayName = firstHour.toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+
+  const option = document.createElement("option");
+  option.value = weekdayName;
+  option.textContent = weekdayName;
+  hourlyDaySelect.appendChild(option);
+  hourlyDaySelect.value = weekdayName;
+
+  // Update dropdown
+  // const hourlyDaySelect = document.getElementById("hourlyDay");
+  // hourlyDaySelect.innerHTML = ""; // clear old options
+  // const option = document.createElement("option");
+  // option.value = weekdayName;
+  // option.textContent = weekdayName;
+  // hourlyDaySelect.appendChild(option);
+  // hourlyDaySelect.value = weekdayName;
+
+  // Update header
+  // const selectedDayEl = document.getElementById("hourlySelectedDay");
+  // selectedDayEl.textContent = fullDate;
+
+  // 3️⃣ Loop through the next 8 hours
+  for (let i = startIndex; i < startIndex + 8; i++) {
+    const timeString = result.hourly.time[i];
+    if (!timeString) break; // safety check
+
+    const time = new Date(timeString);
+    const hour = time.getHours();
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 || 12;
+    // const now = new Date(); // current local time
+    const temp = Math.round(result.hourly.temperature_2m[i]);
+    const iconFile = getWeatherIconName(result.hourly.weather_code[i]);
+
+    const hourEl = document.createElement("div");
+    hourEl.className = "hourly__hour";
+
+    // ✅ Highlight current hour
+    if (
+      time.getFullYear() === now.getFullYear() &&
+      time.getMonth() === now.getMonth() &&
+      time.getDate() === now.getDate() &&
+      hour === now.getHours()
+    ) {
+      hourEl.classList.add("current");
+    }
+
+    hourEl.innerHTML = `
+            <img class="hourly__hour-icon" src="/assets/images/${iconFile}" alt="" aria-hidden="true" />
+            <p class="hourly__hour-time">${formattedHour}:00 ${ampm}</p>
+            <p class="hourly__hour-temp">${temp}${unitSymbol}</p>
+        `;
+
+    hourlyContainer.appendChild(hourEl);
+  }
+}
 
 function loadCurrentWeather(weather) {}
 
@@ -194,7 +346,7 @@ function LoadDailyForecast(weather) {
   }
 }
 
-// WHEN we get weatherCode <51> THEN it returns 'drizzle'
+// WHEN we get weatherCode <0> THEN it returns 'sunny'
 function getWeatherIconName(code) {
   const weatherCodes = {
     0: "sunny",
@@ -227,12 +379,13 @@ function getWeatherIconName(code) {
     99: "storm",
   };
 
-  let fileName = `icon-${weatherCodes[code]}.webp`;
+  if (!weatherCodes[code]) {
+    console.warn("Unknown weather code:", code);
+  }
 
-  return fileName;
+  const icon = weatherCodes[code] ?? "overcast";
+  return `icon-${icon}.webp`;
 }
 
 // Initial load (optional: default city)
 getGeoData("Rotterdam");
-
-//console.log(getWeatherIconName(0));

@@ -138,152 +138,22 @@
           <div class="hourly__content">
             <div class="hourly__header">
               <h2 class="section__title hourly__title">Hourly Forecast</h2>
-              <p class="hourly__selected-day">Tuesday, Aug 5</p>
               <label for="hourlyDay" class="visually-hidden">Select day</label>
               <select
                 name="hourly-day"
                 id="hourlyDay"
                 class="hourly__timeframe-select"
               >
-                <option class="hourly__select-day">Tuesday</option>
+                <!-- JS will inject current day -->
               </select>
             </div>
 
-            <div class="hourly__hours">
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
-              <div class="hourly__hour">
-                <img
-                  class="hourly__hour-icon"
-                  src="/assets/images/icon-sunny.webp"
-                  width="40"
-                  height="40"
-                  alt=""
-                />
-                <p class="hourly__hour-time">3:00 PM</p>
-                <p class="hourly__hour-temp">20°C</p>
-              </div>
+            <div class="hourly__hours" id="hourlyForecast">
+              <!-- JS will inject hourly blocks here -->
             </div>
           </div>
         </section>
       </div>
     </main>
-
-    <!-- Units
-
-  Switch to Imperial/Metric
-
-  Temperature
-
-  Celsius (°C)
-  Fahrenheit (°F)
-
-  Wind Speed
-
-  km/h
-  mph
-
-  Precipitation
-
-  Millimeters (mm)
-  Inches (in)
-
-  How's the sky looking today?
-
-  Search for a city, e.g., New York
-  Search
-
-  Feels like -->
-    <!-- Insert temperature here -->
-
-    <!-- Humidity -->
-    <!-- Insert humidity here -->
-
-    <!-- Wind -->
-    <!-- Insert wind here -->
-
-    <!-- Precipitation -->
-    <!-- Insert precipitation here -->
-
-    <!-- Daily forecast -->
-    <!-- Insert daily forecast for the next 7 days here -->
-
-    <!-- Hourly forecast -->
-    <!-- Insert hourly forecast for the selected day here -->
   </body>
 </html>

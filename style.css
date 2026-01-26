@@ -178,8 +178,10 @@
   }
 
   .main {
-    display: grid;
-    row-gap: 32px;
+    width: 100%;
+    max-width: 1280px; /* pick a number and stick to it */
+    margin-inline: auto;
+    padding-inline: 24px;
   }
 
   .dashboard {
@@ -191,7 +193,7 @@
       "hourly";
     @media (width >= calc(1000 / 16 * 1rem )) {
       gap: 48px 32px;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 2fr 1fr;
       grid-template-areas:
         "current current hourly"
         "daily daily hourly";
@@ -310,17 +312,18 @@
       }
     }
 
+    /* Hero search container */
     .hero__search {
-      display: grid;
-      gap: 12px 16px;
-      width: 100%;
       max-width: calc(656 / 16 * 1rem);
+      margin: 0 auto 24px auto; /* center horizontally + gap below */
 
-      @media (width >= calc(700 / 16 * 1rem)) {
-        grid-template-columns: 1fr auto;
+      @media (min-width: calc(700 / 16 * 1rem)) {
+        grid-template-columns: 2fr auto; /* input flexible, button auto */
+        align-items: center; /* vertically center button with input */
       }
     }
 
+    /* Input box */
     .hero__textbox {
       appearance: none;
       -webkit-appearance: none;
@@ -329,13 +332,13 @@
       background-image: url("/assets/images/icon-search.svg");
       background-repeat: no-repeat;
       background-position: 24px center;
-
       color: var(--color-text-light);
       font-size: var(--font-size-search);
-
       padding: 16px 20px 16px 60px;
       border: none;
       border-radius: 12px;
+      width: 100%; /* fill available space in grid */
+      box-sizing: border-box; /* include padding in width */
     }
 
     /* remove default focus outline */
@@ -363,13 +366,15 @@
       -webkit-text-fill-color: var(--color-text-light);
     }
 
+    /* Search button */
     .hero__button {
       background-color: var(--c-blue-500);
       border-radius: 12px;
       font-size: var(--font-size-search);
       color: var(--color-text-light);
-      padding: 16px 24px;
+      padding: 16px 24px; /* keep top/bottom padding */
       transition: background-color 120ms ease-in-out;
+      height: 100%; /* match input height when side-by-side */
     }
 
     .hero__button:hover {
@@ -467,108 +472,150 @@
 
   .daily {
     grid-area: daily;
-    .daily__title {
-      font-size: var(--font-size-forecast-title);
-    }
+  }
 
-    .daily__forecast {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+  .daily__title {
+    font-size: var(--font-size-forecast-title);
+  }
 
-      @media (width >= calc(700 / 16 * 1rem)) {
-        grid-template-columns: repeat(7, 1fr);
-      }
-    }
+  .daily__forecast {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 
-    .daily__day {
-      display: grid;
-      justify-items: center;
-      gap: 16px;
-      padding: 16px 10px;
-      text-align: center;
-    }
-
-    .daily__day-title {
-      font-size: var(--font-size-forecast-day);
-    }
-
-    .daily__day-icon {
-      width: 60px;
-      height: auto;
-    }
-
-    .daily__day-temps {
-      display: flex;
-      justify-content: space-between;
-      font-size: var(--font-size-forecast-temp);
-      justify-self: stretch;
-      /*width: 100%;*/
-    }
-
-    .daily__day-high {
-    }
-
-    .daily__day-low {
-      color: var(--color-text-med-light);
+    @media (width >= calc(700 / 16 * 1rem)) {
+      grid-template-columns: repeat(7, 1fr);
     }
   }
 
-  .hourly {
-    grid-area: hourly;
-
-    .hourly__content {
-      background-color: var(--color-panel-bg-dark);
-      border-radius: 20px;
-      padding: 20px 16px;
-    }
-
-    .hourly__header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-block-end: 16px;
-    }
-
-    .hourly__title {
-      font-size: var(--font-size-forecast-title);
-      font-weight: 600;
-    }
-
-    .hourly__select {
-    }
-
-    .hourly__select-day {
-    }
-
-    .hourly__hours {
-      display: grid;
-      gap: 16px;
-    }
-
-    .hourly__hour {
-      display: grid;
-      grid-template-columns: auto auto 1fr;
-      gap: 8px;
-      align-items: center;
-      padding: 10px 16px 10px 12px;
-      background-color: var(--color-panel-bg-medium);
-      border: 1px solid var(--color-panel-border);
-      border-radius: 8px;
-    }
-
-    .hourly__hour-icon {
-      width: 40px;
-      height: auto;
-    }
-
-    .hourly__hour-time {
-      font-size: var(--font-size-forecast-hour);
-    }
-
-    .hourly__hour-temp {
-      font-size: var(--font-size-forecast-temp);
-      justify-self: end;
-    }
+  .daily__day {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    padding: 16px 10px;
+    text-align: center;
   }
+
+  .daily__day-title {
+    font-size: var(--font-size-forecast-day);
+  }
+
+  .daily__day-icon {
+    width: 60px;
+    height: auto;
+  }
+
+  .daily__day-temps {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-forecast-temp);
+    justify-self: stretch;
+    /*width: 100%;*/
+  }
+
+  .daily__day-high {
+  }
+
+  .daily__day-low {
+    color: var(--color-text-med-light);
+  }
+}
+
+.hourly {
+  grid-area: hourly;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* 👈 allow full grid height */
+  background-color: var(--color-panel-bg-dark);
+  border-radius: 20px;
+  padding: 20px 16px;
+}
+
+.hourly__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block-end: 16px;
+}
+
+.hourly__title {
+  font-size: var(--font-size-forecast-title);
+  font-weight: 600;
+}
+
+.hourly__select {
+}
+
+.hourly__select-day {
+}
+
+/* Hourly container */
+.hourly__hours {
+  flex: 1; /* fill remaining height of .hourly */
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 12px; /* spacing between hour blocks */
+  overflow-y: auto; /* scroll if too many hours */
+  padding-right: 4px; /* optional for scrollbar spacing */
+}
+
+/* Hourly blocks */
+.hourly__hour {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* icon | time | temp */
+  align-items: center;
+  padding: 12px 16px; /* slightly bigger padding for height */
+  background-color: var(--color-panel-bg-medium);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+
+  flex: 1 1 0; /* 👈 make each hour block grow equally */
+  min-height: 60px; /* optional, keeps them readable */
+}
+
+.hourly__hour-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.hourly__hour-time {
+  text-align: left;
+}
+
+.hourly__hour-temp {
+  text-align: right;
+}
+
+/* Highlight current hour */
+.hourly__hour.current {
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-panel-bg-light);
+}
+
+/* Dashboard wrapper */
+.dashboard {
+  display: grid;
+  row-gap: 24px; /* vertical spacing between panels */
+  column-gap: 32px; /* horizontal spacing between columns */
+  max-width: 1200px; /* ✅ keeps dashboard centered and not full-width */
+  margin: 0 auto; /* center horizontally */
+  grid-template-areas:
+    "current"
+    "daily"
+    "hourly";
+}
+
+@media (width >= calc(1000 / 16 * 1rem)) {
+  .dashboard {
+    grid-template-columns: 2fr 1fr; /* left = daily/current, right = hourly */
+    grid-template-areas:
+      "current hourly"
+      "daily   hourly";
+  }
+}
+
+/* Hero search tweaks */
+.hero__search {
+  max-width: calc(656 / 16 * 1rem);
+  margin: 0 auto 24px auto; /* center horizontally + gap below */
 }
