@@ -262,8 +262,21 @@
     }
 
     .header__select {
-      display: inline-block;
-      width: auto;
+      position: relative;
+      width: 120px;
+      height: 44px;
+      overflow: visible; /* important for debugging */
+    }
+
+    .header__select::after {
+      content: "▼";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: white;
+      pointer-events: none;
     }
 
     .header__dropdown {

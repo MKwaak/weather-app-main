@@ -262,34 +262,43 @@
     }
 
     .header__select {
-      display: inline-block;
-      width: auto;
+      position: relative;
+      width: 120px;
+      height: 44px;
+      overflow: visible; /* important for debugging */
+    }
+
+    .header__select::after {
+      content: "▼";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: white;
+      pointer-events: none;
     }
 
     .header__dropdown {
+      /*background-image: url("/assets/images/icon-units.svg"); This line is in HTML */
+      width: auto;
+      min-width: 130px;
       appearance: none;
       -webkit-appearance: none;
-      -moz-appearance: none;
-      /* Extra force voor Internet Explorer/Edge legacy */
-      background-repeat: no-repeat;
-      /* Zorg dat je tekst niet over je icoon heen valt */
-      text-indent: 0.01px;
-      text-overflow: "";
-      width: auto;
-      min-width: 130px; /* Iets ruimer voor Fahrenheit + pijltje */
-      height: 48px;
-      /* Extra padding rechts (2.5rem) voor het pijltje */
-      padding: 0 2.5rem 0 2.75rem;
 
-      /* TWEE ACHTERGRONDEN: Je icoon links én een pijltje rechts */
+      height: 48px;
+      padding: 0 2.5rem 0 2.75rem;
+      line-height: 48px;
+
       background-image:
         url("/assets/images/icon-units.svg"),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+
+      background-repeat: no-repeat, no-repeat;
       background-position:
         0.75rem center,
         calc(100% - 1rem) center;
       background-size: 16px, 12px;
-
       background-color: var(--color-panel-bg-dark);
       color: var(--color-text-light);
       font-family: inherit;
@@ -297,10 +306,6 @@
       border: none;
       border-radius: 12px;
       cursor: pointer;
-    }
-    /* De 'killer' voor het standaard pijltje in IE/Edge */
-    .header__dropdown::-ms-expand {
-      display: none;
     }
   }
 }
@@ -329,14 +334,12 @@
 /* 2. De Titel (Links) */
 .hero__title {
   grid-column: 1 / -1; /* Mobiel: volle breedte */
-  text-align: center; /* Of center, wat je voorkeur heeft */
-  width: 100%;
-  margin-bottom: 8px;
+  text-align: left; /* Of center, wat je voorkeur heeft */
   margin: 0;
   font-size: var(--font-size-h1);
 
   @media (min-width: 1000px) {
-    grid-column: 1 / span 2; /* Over de volle breedte van je 1fr 350px grid */
+    grid-column: 1; /* Desktop: Blijft in de linkerkolom */
     margin-bottom: 0;
   }
 }

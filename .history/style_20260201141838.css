@@ -262,8 +262,21 @@
     }
 
     .header__select {
-      display: inline-block;
-      width: auto;
+      position: relative;
+      width: 120px;
+      height: 44px;
+      overflow: visible; /* important for debugging */
+    }
+
+    .header__select::after {
+      content: "▼";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: white;
+      pointer-events: none;
     }
 
     .header__dropdown {
@@ -329,14 +342,12 @@
 /* 2. De Titel (Links) */
 .hero__title {
   grid-column: 1 / -1; /* Mobiel: volle breedte */
-  text-align: center; /* Of center, wat je voorkeur heeft */
-  width: 100%;
-  margin-bottom: 8px;
+  text-align: left; /* Of center, wat je voorkeur heeft */
   margin: 0;
   font-size: var(--font-size-h1);
 
   @media (min-width: 1000px) {
-    grid-column: 1 / span 2; /* Over de volle breedte van je 1fr 350px grid */
+    grid-column: 1; /* Desktop: Blijft in de linkerkolom */
     margin-bottom: 0;
   }
 }
