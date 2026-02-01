@@ -1,0 +1,645 @@
+@layer global {
+  /* dm-sans-300 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "DM Sans";
+    font-style: normal;
+    font-weight: 300;
+    src: url("/assets/fonts/dm-sans-v17-latin-300.woff2") format("woff2"); /* Fixed path */
+  }
+  /* dm-sans-500 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "DM Sans";
+    font-style: normal;
+    font-weight: 500;
+    src: url("/assets/fonts/dm-sans-v17-latin-500.woff2") format("woff2"); /* Fixed path */
+  }
+  /* dm-sans-600 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "DM Sans";
+    font-style: normal;
+    font-weight: 600;
+    src: url("/assets/fonts/dm-sans-v17-latin-600.woff2") format("woff2"); /* Fixed path */
+  }
+  /* dm-sans-600italic - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "DM Sans";
+    font-style: italic;
+    font-weight: 600;
+    src: url("/assets/fonts/dm-sans-v17-latin-600italic.woff2") format("woff2"); /* Fixed path */
+  }
+  /* dm-sans-700 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "DM Sans";
+    font-style: normal;
+    font-weight: 700;
+    src: url("/assets/fonts/dm-sans-v17-latin-700.woff2") format("woff2"); /* Fixed path */
+  }
+
+  /* bricolage-grotesque-regular - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 400;
+    src: url("/assets/fonts/bricolage-grotesque-v9-latin-regular.woff2")
+      format("woff2"); /* Fixed path */
+  }
+  /* bricolage-grotesque-700 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 700;
+    src: url("/assets/fonts/bricolage-grotesque-v9-latin-700.woff2")
+      format("woff2"); /* Fixed path */
+  }
+
+  :root {
+    --c-neutral-900: hsl(243, 96%, 9%);
+    --c-neutral-800: hsl(243, 27%, 20%);
+    --c-neutral-700: hsl(243, 23%, 24%);
+    --c-neutral-600: hsl(243, 23%, 30%);
+    --c-neutral-300: hsl(240, 6%, 70%);
+    --c-neutral-200: hsl(250, 6%, 84%);
+    --c-neutral-0: hsl(0, 0%, 100%);
+    --c-orange-500: hsl(28, 100%, 52%);
+    --c-blue-500: hsl(233, 67%, 56%);
+    --c-blue-700: hsl(248, 70%, 36%);
+
+    --color-main-bg: var(--c-neutral-900);
+    --color-panel-bg-dark: var(--c-neutral-800);
+    --color-panel-bg-dark-hover: var(--c-neutral-700);
+    --color-panel-bg-medium: var(--c-neutral-700);
+    --color-panel-bg-light: var(--c-neutral-600);
+    --color-panel-border: var(--c-neutral-600);
+    --color-text-light: var(--c-neutral-0);
+    --color-text-med-light: var(--c-neutral-200);
+    --color-button-bg: var(--c-blue-500);
+    --color-button-bg-hover: var(--c-blue-700);
+
+    --fs-96: calc(96 / 16 * 1rem);
+    --fs-52: calc(52 / 16 * 1rem);
+    --fs-32: calc(32 / 16 * 1rem);
+    --fs-28: calc(28 / 16 * 1rem);
+    --fs-20: calc(20 / 16 * 1rem);
+    --fs-18: calc(18 / 16 * 1rem);
+    --fs-16: calc(16 / 16 * 1rem);
+    --fs-14: calc(14 / 16 * 1rem);
+
+    --font-size-h1: var(--fs-52);
+    --font-size-dropdown: var(--fs-14);
+    --font-size-search: var(--fs-20);
+    --font-size-city: var(--fs-28);
+    --font-size-date: var(--fs-18);
+    --font-size-temp: var(--fs-96);
+    --font-size-panel-title: var(--fs-18);
+    --font-size-panel-value: var(--fs-32);
+    --font-size-forecast-title: var(--fs-20);
+    --font-size-forecast-day: var(--fs-18);
+    --font-size-forecast-temp: var(--fs-16);
+    --font-size-forecast-dropdown: var(--fs-16);
+    --font-size-forecast-hour: var(--fs-20);
+
+    @media (width >= calc(700 / 16 * 1rem)) {
+      --font-size-dropdown: var(--fs-16);
+    }
+
+    --color-white: hsl(0, 0%, 100%);
+    --color-light-blue: hsl(223, 64%, 98%);
+    --color-light-grayish-blue: hsl(223, 23%, 93%);
+    --color-dark-grayish-blue: hsl(219, 14%, 63%);
+    --color-very-dark-blue: hsl(218, 23%, 16%);
+    --font-family-primary: "DM Sans", sans-serif; /* Removed duplicate */
+    --font-family-secondary:
+      "Bricolage Grotesque", sans-serif; /* Removed duplicate */
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  * {
+    margin: 0;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  body {
+    font-family: "DM Sans", Arial, Helvetica, sans-serif;
+    font-weight: 500;
+    background-color: var(--color-main-bg);
+    color: var(--color-text-light);
+    line-height: 1.2;
+    padding-block-end: 80px;
+  }
+
+  h1 {
+    font-family: "Bricolage Grotesque", Arial, Helvetica, sans-serif;
+  }
+
+  input,
+  button,
+  textarea {
+    font: inherit;
+    width: 100%;
+    border: none;
+  }
+
+  .wrapper {
+    display: grid;
+    grid-template-columns: 1fr calc(100% - 32px) 1fr;
+
+    @media (width >= calc(700 / 16 * 1rem)) {
+      grid-template-columns:
+        1fr min(calc(100% - 48px), calc(1216 / 16 * 1rem))
+        1fr; /* Fixed placeholder */
+    }
+
+    > * {
+      grid-column: 2;
+    }
+  } /* Added missing closing brace for @layer global */
+
+  .visually-hidden {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .main {
+    width: 100%;
+    max-width: 1280px; /* pick a number and stick to it */
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+
+  .dashboard {
+    display: grid;
+    gap: 32px;
+    grid-template-areas:
+      "current"
+      "daily"
+      "hourly";
+    @media (width >= calc(1000 / 16 * 1rem )) {
+      gap: 48px 32px;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-areas:
+        "current current hourly"
+        "daily daily hourly";
+    }
+  }
+
+  .block {
+    background-color: var(--color-panel-bg-dark);
+    border: 1px solid var(--color-panel-border);
+    border-radius: 12px;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .skip-link:focus {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    height: auto;
+    margin: 0;
+    clip-path: none;
+    white-space: normal;
+    background-color: var(--color-main-bg);
+    color: var(--color-text-light);
+    padding: 10px 14px;
+    z-index: 1000;
+  }
+}
+
+@layer component {
+  .header {
+    .header__content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-block-start: 16px;
+    }
+
+    .header__homelink {
+    }
+    .header__logo {
+      width: calc(137 / 16 * 1rem);
+
+      @media screen and (width >= calc(700 / 16 * 1rem)) {
+        width: calc(197 / 16 * 1rem);
+      }
+    }
+
+    .header__select {
+      position: relative;
+      width: 120px;
+      height: 44px;
+      overflow: visible; /* important for debugging */
+    }
+
+    .header__select::after {
+      content: "▼";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: white;
+      pointer-events: none;
+    }
+
+    .header__dropdown {
+      /*background-image: url("/assets/images/icon-units.svg"); This line is in HTML */
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      height: 48px;
+      padding: 0 1rem 0 2.75rem;
+      line-height: 48px;
+
+      background-color: var(--color-panel-bg-dark);
+      background-image: url("/assets/images/icon-units.svg");
+      background-repeat: no-repeat;
+      background-position: 0.75rem center;
+      background-size: 16px;
+
+      color: var(--color-text-light);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+  }
+
+  .hero {
+    .hero__content {
+      display: grid;
+      justify-items: stretch; /* Dwingt kinderen om breedte te pakken */
+      padding-block-start: 48px;
+      width: 100%;
+    }
+
+    .hero__title {
+      font-size: var(--font-size-h1);
+      margin-block-end: 48px;
+      text-align: center;
+      line-height: 1.2;
+
+      @media (width < calc(1000 / 16 * 1rem)) {
+        max-width: 15ch;
+      }
+    }
+
+    /* Hero search container */
+    .hero__search {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+
+      /* MATCH DE DASHBOARD-LOGICA: */
+      width: 100%;
+      max-width: 1037px; /* Zorg dat dit exact gelijk is aan de max-width van je dashboard */
+      margin-inline: auto; /* Dit centreert de balk, net zoals bij het dashboard */
+      margin-block-end: 24px;
+
+      @media (min-width: calc(1000 / 16 * 1rem)) {
+        /* Gebruik exact dezelfde kolommen en gap als in je dashboard */
+        grid-template-columns: 2fr 1fr;
+        gap: 32px;
+        align-items: center;
+      }
+    }
+
+    /* Input box */
+    .hero__textbox {
+      appearance: none;
+      -webkit-appearance: none;
+
+      background-color: var(--color-panel-bg-dark);
+      background-image: url("/assets/images/icon-search.svg");
+      background-repeat: no-repeat;
+      background-position: 24px center;
+      color: var(--color-text-light);
+      font-size: var(--font-size-search);
+      padding: 16px 20px 16px 60px;
+      border: none;
+      border-radius: 12px;
+      width: 100%; /* fill available space in grid */
+      min-width: 0; /* allow shrinking in grid */
+      box-sizing: border-box; /* include padding in width */
+    }
+
+    /* remove default focus outline */
+    .hero__textbox:focus {
+      outline: none;
+    }
+
+    /* accessible keyboard focus */
+    .hero__textbox:focus-visible {
+      box-shadow: 0 0 0 2px var(--color-panel-border);
+    }
+
+    /* placeholder text */
+    .hero__textbox::placeholder {
+      color: var(--color-text-med-light);
+    }
+
+    /* hover */
+    .hero__textbox:hover {
+      background-color: var(--color-panel-bg-dark-hover);
+    }
+
+    .hero__textbox:-webkit-autofill {
+      -webkit-box-shadow: 0 0 0 1000px var(--color-panel-bg-dark) inset;
+      -webkit-text-fill-color: var(--color-text-light);
+    }
+
+    /* Search button */
+    .hero__button {
+      background-color: var(--c-blue-500);
+      border-radius: 12px;
+      font-size: var(--font-size-search);
+      color: var(--color-text-light);
+      padding: 16px 24px; /* keep top/bottom padding */
+      transition: background-color 120ms ease-in-out;
+      height: 100%; /* match input height when side-by-side */
+    }
+
+    .hero__button:hover {
+      /* Fixed nested selector */
+      background-color: var(--color-button-bg-hover);
+      cursor: pointer;
+    }
+  }
+
+  .current {
+    grid-area: current;
+
+    .current__weather {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-block-end: 20px;
+      padding: 40px 24px;
+      background-image: url(/assets/images/bg-today-small.svg);
+      background-repeat: no-repeat;
+      background-color: var(--c-blue-700);
+      background-size: cover;
+      background-position: center-bottom;
+      border-radius: 20px;
+      overflow: hidden;
+
+      @media (width >= calc(700 / 16 * 1rem)) {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        background-image: url(/assets/images/bg-today-large.svg);
+        padding-block: 83px;
+      }
+    }
+
+    .current__location {
+      text-align: center;
+    }
+
+    .current__city {
+      font-size: var(--font-size-city);
+      font-weight: 700;
+      margin-block-end: 12px;
+
+      white-space: nowrap; /* Dwingt de naam op één regel */
+      overflow: hidden; /* Verbergt wat buiten de bak steekt */
+      text-overflow: ellipsis; /* Plakt automatisch '...' aan het eind als het te lang is */
+    }
+
+    .current__date {
+      font-size: var(--font-size-date);
+      color: var(--color-text-med-light);
+    }
+
+    .current__info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .current__icon {
+      width: 120px;
+      height: auto;
+    }
+
+    .current__temp {
+      font-size: var(--font-size-temp);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    .current__conditions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+
+      @media (width >= calc(700 / 16 * 1rem)) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .current__condition {
+        padding: 20px;
+      }
+
+      .current__condition-title {
+        font-size: var(--font-size-panel-title);
+        color: var(--color-text-med-light);
+        margin-block-end: 24px;
+      }
+
+      .current__condition-value {
+        font-size: var(--font-size-panel-value);
+        font-weight: 300;
+      }
+    }
+  }
+
+  .daily {
+    grid-area: daily;
+  }
+
+  .daily__title {
+    font-size: var(--font-size-forecast-title);
+  }
+
+  .daily__forecast {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+
+    @media (width >= calc(700 / 16 * 1rem)) {
+      grid-template-columns: repeat(7, 1fr);
+    }
+  }
+
+  .daily__day {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+
+  .daily__day-title {
+    font-size: var(--font-size-forecast-day);
+  }
+
+  .daily__day-icon {
+    width: 60px;
+    height: auto;
+  }
+
+  .daily__day-temps {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-forecast-temp);
+    justify-self: stretch;
+    /*width: 100%;*/
+  }
+
+  .daily__day-high {
+  }
+
+  .daily__day-low {
+    color: var(--color-text-med-light);
+  }
+}
+
+.hourly {
+  grid-area: hourly;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* 👈 allow full grid height */
+  background-color: var(--color-panel-bg-dark);
+  border-radius: 20px;
+  padding: 20px 16px;
+}
+
+.hourly__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-block-end: 16px;
+}
+
+.hourly__title {
+  font-size: var(--font-size-forecast-title);
+  font-weight: 600;
+}
+
+.hourly__select {
+}
+
+.hourly__select-day {
+}
+
+/* Hourly container */
+.hourly__hours {
+  flex: 1; /* fill remaining height of .hourly */
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 12px; /* spacing between hour blocks */
+  overflow-y: auto; /* scroll if too many hours */
+  padding-right: 4px; /* optional for scrollbar spacing */
+}
+
+/* Hourly blocks */
+.hourly__hour {
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* icon | time | temp */
+  align-items: center;
+  padding: 12px 16px; /* slightly bigger padding for height */
+  background-color: var(--color-panel-bg-medium);
+  border: 1px solid var(--color-panel-border);
+  border-radius: 8px;
+
+  flex: 1 1 0; /* 👈 make each hour block grow equally */
+  min-height: 60px; /* optional, keeps them readable */
+}
+
+.hourly__hour-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.hourly__hour-time {
+  text-align: left;
+}
+
+.hourly__hour-temp {
+  text-align: right;
+}
+
+/* Highlight current hour */
+.hourly__hour.current {
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-panel-bg-light);
+}
+
+/* Dashboard wrapper */
+.dashboard {
+  display: grid;
+  row-gap: 24px; /* vertical spacing between panels */
+  column-gap: 32px; /* horizontal spacing between columns */
+  max-width: 1200px; /* ✅ keeps dashboard centered and not full-width */
+  margin: 0 auto; /* center horizontally */
+  grid-template-areas:
+    "current"
+    "daily"
+    "hourly";
+}
+
+@media (width >= calc(1000 / 16 * 1rem)) {
+  .dashboard {
+    gap: 48px 32px;
+    /* DIT IS DE KEY: we vervangen 2fr 1fr door dit: */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+
+    grid-template-areas:
+      "current hourly"
+      "daily   hourly";
+  }
+}
+/* Debug outlines - remove these later
+.hero__content {
+  outline: 2px solid red !important;
+}
+.hero__search {
+  outline: 2px solid lime !important;
+}
+.dashboard {
+  outline: 2px solid cyan !important;
+}
+  */

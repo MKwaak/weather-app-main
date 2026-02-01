@@ -338,46 +338,28 @@
 }
 
 /* 3. De Zoekbalk (Rechts) */
-/* De Container: Gebruik Flexbox om ze naast elkaar te zetten */
 .hero__search {
-  display: grid;
-  grid-template-columns: 1fr; /* Mobiel: alles onder elkaar */
-  grid-column: 1 / -1; /* Zorgt dat de container de volle breedte pakt om de grid te kunnen verdelen */
+  grid-column: 1 / -1; /* Mobiel: volle breedte */
+  display: flex; /* Binnen de zoekbalk gebruiken we flex voor input + button */
   gap: 12px;
   width: 100%;
-  max-width: 1184px;
-  margin: 16px auto 0 auto;
-}
 
-@media screen and (min-width: 1000px) {
-  .hero__search {
-    /* HIER GEBEURT HET: We kopiëren de 1fr 350px en de 32px gap */
-    grid-template-columns: 1fr 350px !important;
-    column-gap: 32px !important;
-    margin-top: 0;
-    align-items: end; /* Zorgt dat ze op dezelfde bodemlijn staan */
-  }
-  .hero__textbox {
-    grid-column: 1; /* Blijft links boven 'current' */
-  }
-
-  .hero__button {
-    grid-column: 2; /* SWITCH: Verschuift nu naar de rechterkolom boven 'hourly' */
-    width: 100%;
+  @media (min-width: 1000px) {
+    grid-column: 2; /* Desktop: SPRINGT NAAR DE 350PX KOLOM */
+    width: 350px; /* Dwingt de breedte af */
   }
 }
 
-/* De Textbox: Zorg dat hij op mobiel ook goed oogt */
+/* Input box */
 .hero__textbox {
-  grid-column: 1; /* Dwingt de textbox naar de brede linkerkant */
-  width: 100%;
-  height: 56px;
-  /* OUD 1 feb. flex: 1; /* DIT IS DE KEY: hij vult de rest van de 350px */
-  box-sizing: border-box; /* Zorgt dat padding de hoogte niet verpest */
+  flex: 1; /* DIT IS DE KEY: hij vult de rest van de 350px */
   min-width: 0; /* Voorkomt dat hij de box opduwt */
+  height: 56px;
   border-radius: 12px;
   /* Styling en padding */
+  width: 100%;
   border-radius: 12px;
+  box-sizing: border-box; /* Onmisbaar! */
   color: var(--color-text-light);
   font-size: var(--font-size-search);
   font-family: inherit; /* Zorgt dat het niet terugvalt op een standaard font */
@@ -425,15 +407,12 @@
   -webkit-text-fill-color: var(--color-text-light);
 }
 
-/* De Button: Zorg dat hij op mobiel de volle breedte pakt */
+/* Search button */
 .hero__button {
-  grid-column: 1; /* Dwingt de button naar de 350px rechterkant */
-  width: 100%;
+  width: auto; /* Niet meer 100% op desktop! */
+  padding: 0 24px; /* Geef de knop wat ademruimte aan de zijkanten */
   height: 56px;
-  /* OUD 1 feb. flex-shrink: 0; /* Mag niet kleiner worden dan de inhoud */
-  box-sizing: border-box;
-  /* OUD 1 feb. min-width: 80px;
-  padding: 0 24px; OUD 1 feb. */
+  flex-shrink: 0; /* Zorgt dat de knop niet wordt platgedrukt */
   border-radius: 12px;
   /* Styling */
   background-color: var(--c-blue-500);
@@ -444,22 +423,6 @@
   box-sizing: border-box;
   border: 1px solid var(--color-accent);
   transition: background-color 120ms ease-in-out;
-}
-
-/* 2. De Switch (Desktop) */
-@media screen and (min-width: 1000px) {
-  .hero__search {
-    grid-template-columns: 1fr 350px !important;
-    column-gap: 32px !important;
-  }
-
-  .hero__textbox {
-    grid-column: 1 !important; /* Blijft links */
-  }
-
-  .hero__button {
-    grid-column: 2 !important; /* SCHUIFT NAAR RECHTS */
-  }
 }
 
 .hero__button:hover {
@@ -651,7 +614,6 @@
   display: grid !important;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  min-height: min-content; /* Dwingt de browser naar de inhoud te kijken */
 }
 
 /* De aanpassing voor Desktop: LOS van de rest */
@@ -716,11 +678,10 @@
   grid-area: hourly;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Vul de hele rechterkolom */
-  min-height: 500px; /* Geef het een basis zodat het niet inklapt */
-  border-radius: 16px;
-  padding: 20px;
   background-color: var(--color-panel-bg-dark);
+  border-radius: 20px;
+  padding: 20px 16px;
+  height: 100%;
 }
 
 /* MOBIEL: Beperk de hoogte zodat je niet eindeloos scrollt */
@@ -771,9 +732,10 @@
 .hourly__hours {
   display: flex;
   flex-direction: column; /* stack vertically */
-  gap: 12px; /* spacing between hour blocks */
+  gap: 10px; /* spacing between hour blocks */
   flex: 1; /* Elke uur-box wordt even hoog */
   overflow-y: auto; /* Zorgt voor een scrollbar als er teveel uren zijn */
+  min-height: 0; /* CRUCIAAL voor scrollen binnen flexbox */
   padding-right: 8px; /* optional for scrollbar spacing */
 }
 

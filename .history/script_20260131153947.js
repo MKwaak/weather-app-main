@@ -66,32 +66,28 @@ async function getGeoData(search) {
 
 // Update city, country, date
 function loadLocationData(locationData) {
-  // 1. We pakken de data uit het eerste resultaat
-  const address = locationData[0].address;
+  const location = locationData[0].address;
+  const cityKeys = [
+    "city",
+    "town",
+    "village",
+    "municipality",
+    "city_district",
+    "province",
+    "state",
+  ];
+  const city = cityKeys.find((key) => location[key]) || "Unknown location";
 
-  // 2. De "slimme zoektocht" naar de stadsnaam (deze was al goed!)
-  const city =
-    address.city ||
-    address.town ||
-    address.village ||
-    address.municipality ||
-    address.suburb ||
-    address.city_district ||
-    // NIEUW: Voor steden die ook een provincie/regio zijn (zoals Oslo, Berlijn of Wenen)
-    address.county ||
-    address.state_district ||
-    address.state ||
-    address.province ||
-    address.region ||
-    "Unknown location";
+  //location.county ||
+  //location.region ||
+  //location.state_district ||
+  //location.city_district ||
+  //location.suburb ||
 
-  // 3. FIX: Gebruik 'address' in plaats van 'location'
-  console.log("Full address object:", address);
+  console.log("Address object:", location);
+  console.log("Tokyo address:", location);
 
-  // 4. FIX: landcode ophalen uit address (met een extra check voor de veiligheid)
-  const country = address.country_code
-    ? address.country_code.toUpperCase()
-    : "??";
+  const country = location.country_code.toUpperCase();
 
   const date = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -100,7 +96,6 @@ function loadLocationData(locationData) {
     weekday: "long",
   }).format(new Date());
 
-  // 5. De tekst in de HTML zetten
   divCityCountry.textContent = `${city}, ${country}`;
   divCurrentDate.textContent = date;
 }

@@ -302,93 +302,84 @@
     }
   }
 }
+.hero {
+  /* De hero zelf mag breed zijn, maar de content moet gelijnd zijn */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
 
-/* 1. De Container (Houdt alles centraal) */
 .hero__content {
   display: grid;
-  grid-template-columns: 1fr; /* Mobiel: alles onder elkaar */
-  gap: 24px;
+  /* Matcht exact met je dashboard */
+  grid-template-columns: 1fr 350px;
+  column-gap: 32px;
+
   width: 100%;
-  max-width: 1184px;
+  max-width: calc(1184 / 16 * 1rem);
   margin: 0 auto;
-  padding: 48px 20px;
+  padding: 48px 20px 24px;
   box-sizing: border-box;
-
-  /* DESKTOP SWITCH */
-  @media (min-width: 1000px) {
-    /* WE KOPIËREN HET DASHBOARD GRID EXACT */
-    grid-template-columns: 1fr 350px;
-    column-gap: 32px;
-    padding: 48px 0;
-    align-items: end; /* Alles netjes op de bodemlijn */
-  }
 }
 
-/* 2. De Titel (Links) */
 .hero__title {
-  grid-column: 1 / -1; /* Mobiel: volle breedte */
-  text-align: left; /* Of center, wat je voorkeur heeft */
-  margin: 0;
+  /* Zorgt dat de titel niet in de linkerkolom gepropt wordt, 
+  maar over de hele breedte (beide kolommen) loopt */
+  grid-column: 1 / -1;
+  margin-bottom: 24px; /* Ruimte tussen tekst en zoekveld */
   font-size: var(--font-size-h1);
+  margin-block-end: 48px;
+  text-align: center;
+  line-height: 1.2;
 
-  @media (min-width: 1000px) {
-    grid-column: 1; /* Desktop: Blijft in de linkerkolom */
-    margin-bottom: 0;
+  @media (width < calc(1000 / 16 * 1rem)) {
+    max-width: 15ch;
   }
 }
 
-/* 3. De Zoekbalk (Rechts) */
-/* De Container: Gebruik Flexbox om ze naast elkaar te zetten */
+/* Hero search container */
 .hero__search {
+  /* 1. BASIS (Mobiel): Alles onder elkaar */
   display: grid;
-  grid-template-columns: 1fr; /* Mobiel: alles onder elkaar */
-  grid-column: 1 / -1; /* Zorgt dat de container de volle breedte pakt om de grid te kunnen verdelen */
-  gap: 12px;
+  grid-template-columns: 1fr; /* Slechts één kolom op mobiel */
+  gap: 16px;
   width: 100%;
-  max-width: 1184px;
-  margin: 16px auto 0 auto;
-}
+  max-width: calc(1184 / 16 * 1rem);
+  margin: 0 auto 24px auto;
+  padding: 0;
 
-@media screen and (min-width: 1000px) {
-  .hero__search {
-    /* HIER GEBEURT HET: We kopiëren de 1fr 350px en de 32px gap */
-    grid-template-columns: 1fr 350px !important;
-    column-gap: 32px !important;
-    margin-top: 0;
-    align-items: end; /* Zorgt dat ze op dezelfde bodemlijn staan */
-  }
-  .hero__textbox {
-    grid-column: 1; /* Blijft links boven 'current' */
-  }
-
-  .hero__button {
-    grid-column: 2; /* SWITCH: Verschuift nu naar de rechterkolom boven 'hourly' */
-    width: 100%;
+  /* 2. DESKTOP: Pas hier de kolommen aan */
+  @media (min-width: calc(1000 / 16 * 1rem)) {
+    /* Hier gebruiken we exact dezelfde setup als je dashboard */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: center;
   }
 }
 
-/* De Textbox: Zorg dat hij op mobiel ook goed oogt */
+/* Input box */
 .hero__textbox {
-  grid-column: 1; /* Dwingt de textbox naar de brede linkerkant */
+  /* grid-column: 1; /* Matcht met de hourly box */
   width: 100%;
   height: 56px;
-  /* OUD 1 feb. flex: 1; /* DIT IS DE KEY: hij vult de rest van de 350px */
-  box-sizing: border-box; /* Zorgt dat padding de hoogte niet verpest */
-  min-width: 0; /* Voorkomt dat hij de box opduwt */
-  border-radius: 12px;
-  /* Styling en padding */
-  border-radius: 12px;
+  box-sizing: border-box; /* Onmisbaar! */
+  border-radius: 12px; /* Nu rondom rond omdat er een gap tussen zit */
+  border: 1px solid var(--color-border);
+
+  /* Kleur en Typography */
   color: var(--color-text-light);
-  font-size: var(--font-size-search);
   font-family: inherit; /* Zorgt dat het niet terugvalt op een standaard font */
+  font-size: var(--font-size-search);
+
+  /* Styling */
   background-color: var(--color-panel-bg-dark);
   background-image: url("/assets/images/icon-search.svg");
   background-repeat: no-repeat;
   background-position: 15px center;
   background-size: 20px;
-  padding-left: 48px;
+  padding-left: 48px; /* Pas dit getal aan tot de tekst na het icoontje begint */
   padding-right: 15px;
-  border: 1px solid var(--color-panel-border);
+  /*padding-inline: 16px; */
   outline: none; /* Verwijdert de standaard browser-rand bij klikken */
 
   appearance: none;
@@ -425,41 +416,21 @@
   -webkit-text-fill-color: var(--color-text-light);
 }
 
-/* De Button: Zorg dat hij op mobiel de volle breedte pakt */
+/* Search button */
 .hero__button {
-  grid-column: 1; /* Dwingt de button naar de 350px rechterkant */
-  width: 100%;
+  grid-column: 2; /* Boven de hourly box */
   height: 56px;
-  /* OUD 1 feb. flex-shrink: 0; /* Mag niet kleiner worden dan de inhoud */
+  width: 100%; /* Dwing hem de volledige 350px van de kolom te vullen */
   box-sizing: border-box;
-  /* OUD 1 feb. min-width: 80px;
-  padding: 0 24px; OUD 1 feb. */
   border-radius: 12px;
-  /* Styling */
+
   background-color: var(--c-blue-500);
+  border: 1px solid var(--color-accent);
   color: var(--color-text-light);
   font-size: var(--font-size-search);
   cursor: pointer;
-  border: none;
-  box-sizing: border-box;
-  border: 1px solid var(--color-accent);
   transition: background-color 120ms ease-in-out;
-}
-
-/* 2. De Switch (Desktop) */
-@media screen and (min-width: 1000px) {
-  .hero__search {
-    grid-template-columns: 1fr 350px !important;
-    column-gap: 32px !important;
-  }
-
-  .hero__textbox {
-    grid-column: 1 !important; /* Blijft links */
-  }
-
-  .hero__button {
-    grid-column: 2 !important; /* SCHUIFT NAAR RECHTS */
-  }
+  /* Verwijderd: width: auto en min-width (die vochten met de grid-kolom) */
 }
 
 .hero__button:hover {
@@ -467,44 +438,14 @@
   background-color: var(--color-button-bg-hover);
   cursor: pointer;
 }
-
-/* --- Dashboard (De grote Grid-indeling) --- */
-
-/* 1. De Basis (Mobiel): Alles netjes onder elkaar */
-.dashboard {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-areas:
-    "current"
-    "hourly"
-    "daily";
-  gap: 24px;
-  width: 100%;
-}
-
-/* 2. Desktop: De 2-koloms indeling */
-@media screen and (min-width: 1000px) {
-  .dashboard {
-    grid-template-columns: 1fr 350px;
-    grid-template-areas:
-      "current hourly"
-      "daily   hourly";
-    column-gap: 32px;
+/* De kinderen moeten ook weten in welke kolom ze horen op Desktop */
+@media (min-width: calc(1000 / 16 * 1rem)) {
+  .hero__textbox {
+    grid-column: 1; /* Links boven 'Current' */
   }
-}
-
-/* 3. Wijs de gebieden toe aan de classes */
-.current {
-  grid-area: current;
-  min-width: 0;
-}
-
-.daily {
-  grid-area: daily;
-}
-
-.hourly {
-  grid-area: hourly;
+  .hero__button {
+    grid-column: 2; /* Rechts boven 'Hourly' */
+  }
 }
 
 .current {
@@ -526,7 +467,7 @@
     border-radius: 24px;
     overflow: hidden;
 
-    @media (width >= calc(1000 / 16 * 1rem)) {
+    @media (width >= calc(700 / 16 * 1rem)) {
       display: grid;
       /* DIT IS DE KEY: Matcht nu exact met de onderliggende grid */
       grid-template-columns: 1fr 350px;
@@ -568,9 +509,8 @@
       align-items: center;
       justify-content: center;
       gap: 16px;
-      width: 100%; /* Op mobiel mag hij de volle breedte pakken om te centreren */
 
-      @media (width >= calc(1000 / 16 * 1rem)) {
+      @media (width >= calc(700 / 16 * 1rem)) {
         width: 350px;
         justify-content: flex-end;
         gap: 32px;
@@ -581,10 +521,8 @@
       .current__icon {
         width: 100px;
         height: auto;
-        filter: drop-shadow(
-          0 0 10px rgba(0, 0, 0, 0.1)
-        ); /* Geeft het icoon wat diepte */
         flex-shrink: 0;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
         @media (width >= calc(700 / 16 * 1rem)) {
           width: 120px;
         }
@@ -613,7 +551,7 @@
     }
 
     .current__condition {
-      background-color: var(--color-panel-bg-dark);
+      background-color: var(--color-panel-bg);
       padding: 20px;
       border-radius: 16px;
       /* Optioneel: zorg dat ze even hoog zijn */
@@ -639,60 +577,39 @@
   }
 }
 
-/* --- 5. Daily (De 7 blokjes) --- */
-
 .daily {
-  grid-area: daily;
-  width: 100%;
-}
-
-/* De basis: Mobiel (2 kolommen) */
-.daily__forecast {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  min-height: min-content; /* Dwingt de browser naar de inhoud te kijken */
-}
-
-/* De aanpassing voor Desktop: LOS van de rest */
-@media screen and (min-width: 1000px) {
-  .daily__forecast {
-    grid-template-columns: repeat(7, 1fr) !important;
-  }
+  grid-area: daily; /* Dit zet de 7-daagse voorspelling eronder */
 }
 
 .daily__title {
   font-size: var(--font-size-forecast-title);
-  margin-bottom: 16px;
+}
+
+.daily__forecast {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (width >= calc(700 / 16 * 1rem)) {
+    grid-template-columns: repeat(7, 1fr);
+  }
 }
 
 .daily__day {
-  background-color: var(--color-panel-bg-dark);
-  border-radius: 16px;
-  padding: 16px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 120px;
-  gap: 8px;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 16px 10px;
   text-align: center;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
 }
-
-.daily__day-icon {
-  width: 100%;
-  max-width: 48px;
-  height: auto;
-  margin: 4px auto;
-}
-
-/* ... de rest van je temp styling ... */
 
 .daily__day-title {
   font-size: var(--font-size-forecast-day);
+}
+
+.daily__day-icon {
+  width: 60px;
+  height: auto;
 }
 
 .daily__day-temps {
@@ -711,30 +628,14 @@
   color: var(--color-text-med-light);
 }
 
-/* BASIS STYLING (Geldt voor alles) */
 .hourly {
-  grid-area: hourly;
+  grid-area: hourly; /* Dit zet de urenlijst in de rechterkolom */
   display: flex;
   flex-direction: column;
-  height: 100%; /* Vul de hele rechterkolom */
-  min-height: 500px; /* Geef het een basis zodat het niet inklapt */
-  border-radius: 16px;
-  padding: 20px;
+  height: 100%; /* 👈 allow full grid height */
   background-color: var(--color-panel-bg-dark);
-}
-
-/* MOBIEL: Beperk de hoogte zodat je niet eindeloos scrollt */
-@media (max-width: 999px) {
-  .hourly {
-    max-height: 500px;
-  }
-}
-
-/* DESKTOP: Mag hij langer zijn */
-@media (min-width: 1000px) {
-  .hourly {
-    max-height: 800px;
-  }
+  border-radius: 20px;
+  padding: 20px 16px;
 }
 
 /* De directe container binnen de section */
@@ -774,6 +675,7 @@
   gap: 12px; /* spacing between hour blocks */
   flex: 1; /* Elke uur-box wordt even hoog */
   overflow-y: auto; /* Zorgt voor een scrollbar als er teveel uren zijn */
+  min-height: 0; /* CRUCIAAL voor scrollen binnen flexbox */
   padding-right: 8px; /* optional for scrollbar spacing */
 }
 
@@ -793,18 +695,19 @@
 
 /* Hourly blocks */
 .hourly__hour {
-  display: grid; /* Verander flex naar grid */
-  grid-template-columns: 80px 1fr 60px; /* Tijd | Icoon | Temp */
+  display: flex;
+  justify-content: space-between; /* Duwt tijd en temp maximaal uit elkaar */
   align-items: center;
   padding: 10px 16px;
+  min-height: 0;
+  grid-template-columns: auto 1fr auto; /* icon | time | temp */
   background-color: var(--color-panel-bg-medium);
   border: 1px solid var(--color-panel-border);
   border-radius: 8px;
-  /* flex: 1 1 0; kan weg als je een vaste hoogte wilt, of laat staan voor gelijke verdeling */
+  flex: 1 1 0; /* 👈 make each hour block grow equally */
 }
 
 .hourly__hour-icon {
-  justify-self: center; /* Icoon altijd in het midden */
   width: 32px;
   height: 32px;
 }
@@ -814,13 +717,45 @@
 }
 
 .hourly__hour-temp {
-  font-weight: 700;
   text-align: right;
-  padding-left: 0; /* Minimale afstand tot de tijd */
+  margin-left: auto; /* Forceert de temperatuur naar rechts */
+  padding-left: 20px; /* Minimale afstand tot de tijd */
 }
 
 /* Highlight current hour */
 .hourly__hour.current {
   border: 2px solid var(--color-accent);
   background-color: var(--color-panel-bg-light);
+}
+
+/* Dashboard wrapper */
+.dashboard {
+  display: grid;
+  /* Kolom 1: flexibel (blauwe bak/daily), Kolom 2: vast 350px (hourly) */
+  grid-template-columns: 1fr 350px;
+  /* We definiëren de zones: linksboven, rechts (die over 2 rijen gaat), linksonder */
+  grid-template-areas:
+    "current hourly"
+    "daily   hourly";
+  column-gap: 32px;
+  row-gap: 24px;
+  align-items: start;
+
+  width: 100%; /* DIT zorgt dat hij niet 'ademt' met de tekst mee */
+  max-width: calc(
+    1184 / 16 * 1rem
+  ); /* Zo is het gelijk aan de wrapper max-width */
+  row-gap: 24px; /* vertical spacing between panels */
+  margin: 0 auto; /* center horizontally */
+}
+
+@media (width >= calc(1000 / 16 * 1rem)) {
+  .dashboard {
+    gap: 48px 32px;
+    /* DIT IS DE KEY: we vervangen 2fr 1fr door dit: */
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas:
+      "current hourly"
+      "daily   hourly";
+  }
 }

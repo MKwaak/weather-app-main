@@ -77,12 +77,8 @@ function loadLocationData(locationData) {
     address.municipality ||
     address.suburb ||
     address.city_district ||
-    // NIEUW: Voor steden die ook een provincie/regio zijn (zoals Oslo, Berlijn of Wenen)
-    address.county ||
-    address.state_district ||
-    address.state ||
     address.province ||
-    address.region ||
+    address.state ||
     "Unknown location";
 
   // 3. FIX: Gebruik 'address' in plaats van 'location'

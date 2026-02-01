@@ -1,0 +1,31 @@
+.hero__content {
+  display: grid;
+  /* Matcht exact met je dashboard */
+  grid-template-columns: 1fr 350px;
+  column-gap: 32px;
+
+  width: 100%;
+  max-width: calc(1184 / 16 * 1rem);
+  margin: 0 auto;
+  padding: 48px 20px 24px;
+  box-sizing: border-box;
+
+  /* Boven is nieuw, onder is oud */
+
+  display: flex;
+  flex-direction: column; /* Titel boven, Form onder */
+  align-items: flex-start; /* Zorgt dat alles netjes links begint */
+  width: 100%;
+  max-width: calc(1184 / 16 * 1rem); /* Moet matchen met .dashboard */
+  margin: 0 auto;
+  padding: 48px 20px 24px;
+
+  /* DIT IS DE MATCH: Gebruik dezelfde kolommen als je dashboard */
+  grid-template-columns: 1fr 350px;
+  column-gap: 32px;
+  /* Zorg dat de breedte exact hetzelfde is als je dashboard */
+  padding-block-start: 48px;
+  padding-inline: 20px; /* Zorg dat deze padding matcht met die van je dashboard! */
+  box-sizing: border-box;
+  justify-items: stretch; /* Dwingt kinderen om breedte te pakken */
+}

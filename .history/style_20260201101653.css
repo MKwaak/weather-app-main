@@ -369,8 +369,8 @@
 
 /* De Textbox: Zorg dat hij op mobiel ook goed oogt */
 .hero__textbox {
-  grid-column: 1; /* Dwingt de textbox naar de brede linkerkant */
-  width: 100%;
+  grid-column: 1 !important; /* Dwingt de textbox naar de brede linkerkant */
+  width: 100% !important;
   height: 56px;
   /* OUD 1 feb. flex: 1; /* DIT IS DE KEY: hij vult de rest van de 350px */
   box-sizing: border-box; /* Zorgt dat padding de hoogte niet verpest */
@@ -427,8 +427,8 @@
 
 /* De Button: Zorg dat hij op mobiel de volle breedte pakt */
 .hero__button {
-  grid-column: 1; /* Dwingt de button naar de 350px rechterkant */
-  width: 100%;
+  grid-column: 1 !important; /* Dwingt de button naar de 350px rechterkant */
+  width: 100% !important;
   height: 56px;
   /* OUD 1 feb. flex-shrink: 0; /* Mag niet kleiner worden dan de inhoud */
   box-sizing: border-box;
@@ -444,21 +444,11 @@
   box-sizing: border-box;
   border: 1px solid var(--color-accent);
   transition: background-color 120ms ease-in-out;
-}
 
-/* 2. De Switch (Desktop) */
-@media screen and (min-width: 1000px) {
-  .hero__search {
-    grid-template-columns: 1fr 350px !important;
-    column-gap: 32px !important;
-  }
-
-  .hero__textbox {
-    grid-column: 1 !important; /* Blijft links */
-  }
-
-  .hero__button {
-    grid-column: 2 !important; /* SCHUIFT NAAR RECHTS */
+  @media (min-width: 1000px) {
+    grid-column: 2; /* Desktop: Kolom 2 (boven hourly) */
+    /* OUD 1 feb. width: auto; /* Op desktop wordt de breedte weer bepaald door de tekst/padding */
+    /* OUD 1 feb. min-width: 100px; OUD 1 feb. */
   }
 }
 

@@ -1,0 +1,101 @@
+.hero__content {
+  display: grid;
+  /* Matcht exact met je dashboard */
+  grid-template-columns: 1fr 350px;
+  column-gap: 32px;
+
+  width: 100%;
+  max-width: calc(1184 / 16 * 1rem);
+  margin: 0 auto;
+  padding: 48px 20px 24px;
+  box-sizing: border-box;
+
+  /* Boven is nieuw, onder is oud */
+
+  display: flex;
+  flex-direction: column; /* Titel boven, Form onder */
+  align-items: flex-start; /* Zorgt dat alles netjes links begint */
+  width: 100%;
+  max-width: calc(1184 / 16 * 1rem); /* Moet matchen met .dashboard */
+  margin: 0 auto;
+  padding: 48px 20px 24px;
+
+  /* DIT IS DE MATCH: Gebruik dezelfde kolommen als je dashboard */
+  grid-template-columns: 1fr 350px;
+  column-gap: 32px;
+  /* Zorg dat de breedte exact hetzelfde is als je dashboard */
+  padding-block-start: 48px;
+  padding-inline: 20px; /* Zorg dat deze padding matcht met die van je dashboard! */
+  box-sizing: border-box;
+  justify-items: stretch; /* Dwingt kinderen om breedte te pakken */
+}
+
+.hero__search {
+  /* De form gedraagt zich als een 'sub-container' */
+  grid-column: 1 / -1;
+  display: grid;
+  /* DIT IS DE MATCH: exact dezelfde kolomverhouding als je dashboard */
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  column-gap: 32px; /* Moet exact gelijk zijn aan de dashboard gap */
+  /* DIT IS DE FIX: */
+  width: 100%; /* Eis de volle breedte op */
+  max-width: calc(
+    1184 / 16 * 1rem
+  ); /* Moet exact gelijk zijn aan dashboard max-width */
+  margin: 0 auto 24px auto; /* Centrereren */
+  grid-column: 1 / -1; /* Als de parent een grid is: span over alles */
+  align-self: stretch; /* Zorg dat hij niet inklapt */
+  padding: 0;
+
+  @media (min-width: calc(1000 / 16 * 1rem)) {
+    /* VERANDER DIT: Gebruik 1fr 350px, NIET 2fr 1fr */
+    grid-template-columns: 1fr 350px;
+    gap: 32px;
+    align-items: center;
+  }
+}
+
+.daily__forecast {
+  display: grid;
+  /* Mobiel: 2 kolommen naast elkaar (vult de ruimte beter) */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+
+  @media (width >= calc(700 / 16 * 1rem)) {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+  }
+}
+
+.dashboard {
+  display: grid;
+  /* DIT IS DE KEY: min-content voor de uren, zodat hij niet meer pakt dan nodig */
+  grid-template-columns: 1fr 350px;
+  grid-template-areas:
+    "current hourly"
+    "daily   hourly";
+  column-gap: 32px;
+  row-gap: 24px;
+  align-items: start;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .dashboard {
+    /* Op tablets maken we de uren-kolom iets smaller */
+    grid-template-columns: 1fr 300px;
+    column-gap: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    /* Op mobiel gaan we naar de 'stack' (onder elkaar) */
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "current"
+      "hourly"
+      "daily"; /* Of 'daily' boven 'hourly', wat jij mooier vindt */
+  }
+}
