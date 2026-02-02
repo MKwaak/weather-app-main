@@ -1,0 +1,32 @@
+name: Weather App CI/CD
+
+on:
+  push:
+    branches: [master] # De actie start zodra je naar master pusht
+
+jobs:
+  build-and-test:
+    runs-on: self-hosted # Dit vertelt GitHub: "Gebruik Marcel's Mac"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t mkwaak/weather-app-main:v2 .
+
+      - name: Unit Test (Placeholder)
+        run: |
+          echo "Hier draaien we straks je test scenario's..."
+          # Bijv: npm test of een simpel script dat je HTML checkt
+
+      - name: Push to Docker Hub
+        run: |
+          docker push mkwaak/weather-app-main:v2
+
+      - name: Deploy to Minikube
+        run: |
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+          kubectl rollout status deployment/weather-app-deployment
