@@ -26,7 +26,10 @@ jobs:
 
       - name: Build and Push Image
         run: |
-          # De sed is hier niet meer nodig, want die hebben we in de vorige stap al gedaan!
+          # Stap 1: Vervang de placeholder in de HTML door de echte versie
+          sed -i '' "s/{{VERSION}}/${{ env.DEPLOY_VER }}/g" index.html
+
+          # Stap 2: Bouw en push zoals je al deed
           docker build -t mkwaak/weather-app-main:${{ env.DEPLOY_VER }} .
           docker push mkwaak/weather-app-main:${{ env.DEPLOY_VER }}
 
@@ -44,27 +47,19 @@ jobs:
           kubectl rollout status deployment/weather-app-deployment
 
       - name: 🚀 Run Functional Entry Test
-        continue-on-error: true
-        env:
-          TEST_URL: "http://127.0.0.1:52428" # Pas dit aan naar de juiste URL
         run: |
           export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin"
           pytest tests/test_entry.py
 
       - name: ⏱️ Run Performance Test
-        continue-on-error: true
-        env:
-          TEST_URL: "http://127.0.0.1:52428" # Pas dit aan naar de juiste URL
         run: |
-          k6 run -e MY_URL=$TEST_URL --vus 1 --duration 10s --summary-export=tests/perf_$(date +%s).json tests/performance_test.js
+          k6 run --vus 1 --duration 10s --summary-export=tests/perf_$(date +%s).json tests/performance_test.js
 
       - name: 📈 Run Load Test
-        continue-on-error: true
         run: |
           k6 run --summary-export=tests/load_$(date +%s).json tests/load_test.js
 
       - name: 💥 Run Chaos Recovery Test
-        continue-on-error: true
         run: |
           echo "Start de chaos-load..."
           # We slaan ook de chaos-resultaten op om te zien of de timestamps pieken tijdens de crash
