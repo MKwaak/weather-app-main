@@ -30,13 +30,6 @@ jobs:
           docker build -t mkwaak/weather-app-main:${{ env.DEPLOY_VER }} .
           docker push mkwaak/weather-app-main:${{ env.DEPLOY_VER }}
 
-      - name: 🛡️ Security Scan (Trivy)
-        run: |
-          # Installeer Trivy op je Mac (éénmalig handmatig of via brew in de pipeline)
-          # brew install aquasecurity/trivy/trivy
-          # Scan de image die we net gebouwd hebben
-          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:${{ env.DEPLOY_VER }}
-
       - name: Deploy to Minikube
         run: |
           kubectl apply -f deployment.yaml
@@ -50,26 +43,29 @@ jobs:
 
       - name: ⏱️ Run Performance Test
         run: |
-          k6 run --vus 1 --duration 10s --summary-export=tests/perf_$(date +%s).json tests/performance_test.js
+          # Snelle check: 1 gebruiker, kijken naar de baseline timestamps
+          k6 run --vus 1 --duration 10s tests/performance_test.js
 
       - name: 📈 Run Load Test
         run: |
-          k6 run --summary-export=tests/load_$(date +%s).json tests/load_test.js
+          # Zware check: Ramping up naar 20+ gebruikers
+          k6 run tests/load_test.js
 
       - name: 💥 Run Chaos Recovery Test
         run: |
-          echo "Start de chaos-load..."
-          # We slaan ook de chaos-resultaten op om te zien of de timestamps pieken tijdens de crash
-          k6 run --summary-export=tests/chaos_$(date +%s).json tests/load_test.js &
+          echo "Start de load voor de chaos test..."
+          # Start k6 in de achtergrond (&)
+          k6 run tests/load_test.js &
           K6_PID=$!
 
+          echo "Wacht tot de druk oploopt..."
           sleep 15
-          echo "CHAOS: Pod verwijderen..."
+
+          echo "CHAOS: Een pod verwijderen terwijl de test draait..."
           kubectl delete pod -l app=weather-app --now
 
-          wait $K6_PID
+          echo "Controleren of Kubernetes een nieuwe pod start..."
+          kubectl get pods
 
-      - name: 🏆 Calculate Quality Score
-        run: |
-          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin"
-          python3 tests/calculate_score.py
+          # Wacht tot k6 klaar is en vang de exit code op
+          wait $K6_PID

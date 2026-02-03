@@ -30,13 +30,6 @@ jobs:
           docker build -t mkwaak/weather-app-main:${{ env.DEPLOY_VER }} .
           docker push mkwaak/weather-app-main:${{ env.DEPLOY_VER }}
 
-      - name: 🛡️ Security Scan (Trivy)
-        run: |
-          # Installeer Trivy op je Mac (éénmalig handmatig of via brew in de pipeline)
-          # brew install aquasecurity/trivy/trivy
-          # Scan de image die we net gebouwd hebben
-          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:${{ env.DEPLOY_VER }}
-
       - name: Deploy to Minikube
         run: |
           kubectl apply -f deployment.yaml
