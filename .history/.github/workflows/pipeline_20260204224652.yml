@@ -74,14 +74,14 @@ jobs:
           pytest tests/test_entry.py || true
 
           # 2. Performance
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_$(date +%s).json tests/performance_test.js || true
+          k6 run -e MY_URL=$TEST_URL --summary-export=tests/perf_$(date +%s).json tests/performance_test.js || true
 
           # 3. Load
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_$(date +%s).json tests/load_test.js || true
+          k6 run -e MY_URL=$TEST_URL --summary-export=tests/load_$(date +%s).json tests/load_test.js || true
 
           # 4. Chaos (Achtergrond load + pod delete)
           echo "Start Chaos Test..."
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_$(date +%s).json tests/load_test.js &
+          k6 run -e MY_URL=$TEST_URL --summary-export=tests/chaos_$(date +%s).json tests/load_test.js &
           K6_PID=$!
           sleep 10
           kubectl delete pod -l app=weather-app --now
