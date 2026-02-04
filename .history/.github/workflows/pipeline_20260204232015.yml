@@ -52,17 +52,18 @@ jobs:
           kubectl apply -f service.yaml
           kubectl rollout status deployment/weather-app-deployment
 
-      - name: 🔗 Get Dynamic URL
+    - name: 🔗 Get Dynamic URL
         id: get_url
         run: |
           # 1. Haal het IP van de Minikube node op
           IP=$(minikube ip)
           # 2. Haal de NodePort van je service op (uit de K8s metadata)
           PORT=$(kubectl get svc weather-service -o jsonpath='{.spec.ports[0].nodePort}')
-
+          
           URL="http://$IP:$PORT"
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "Dynamisch adres bepaald via NodePort: $URL"
+
 
   # BOLLETJE 4: De Test-Batterij (Inclusief Chaos)
   testing:
