@@ -5,9 +5,9 @@ metadata:
 spec:
   type: NodePort # Verander dit van LoadBalancer naar NodePort
   selector:
-    app: weather-app # Zorg dat dit overeenkomt met het label in je deployment!
+    app: weather-app
   ports:
     - protocol: TCP
-      port: 80 # Poort binnen het cluster
-      targetPort: 80 # Poort op de container (je app)
+      port: 80
+      targetPort: 80
       nodePort: 31234 # We leggen hem vast op 31234, dat test makkelijker
