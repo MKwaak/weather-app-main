@@ -86,27 +86,31 @@ jobs:
     runs-on: self-hosted
     env:
       TEST_URL: ${{ needs.deploy.outputs.service_url }}
-      PATH: "$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin"
     steps:
       - name: 🔍 1. Functional Tests (Altijd)
         run: |
+          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
           pytest tests/test_entry.py || true
 
       - name: ⚡ 2. Performance Tests
         if: github.event_name == 'push' || github.event.inputs.run_load_test == 'true'
         run: |
+          export PATH="$PATH:/usr/local/bin"
           k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
 
       - name: 🏋️ 3. Load Tests
         if: github.event.inputs.run_load_test == 'true'
         run: |
+          export PATH="$PATH:/usr/local/bin"
           k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
 
       - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
         run: |
+          export PATH="$PATH:/usr/local/bin:/usr/bin"
           echo "Start Chaos Test..."
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_$(date +%s).json tests/load_test.js &
+          # Fix: Gebruik hier ook de vaste naam chaos_results.json voor de Judge!
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
           K6_PID=$!
           sleep 10
           kubectl delete pod -l app=weather-app --now
