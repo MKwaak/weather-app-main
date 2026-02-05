@@ -8,17 +8,22 @@ def calculate():
 
     # Helper functie om het nieuwste bestand te vinden
     def get_latest_data(prefix):
-        # Zoek in de 'tests' map naar bestanden die beginnen met de prefix en eindigen op .json
+        # We kijken eerst of het vaste bestand er is
+        file_path = f"tests/{prefix}_results.json"
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r') as f:
+                    return json.load(f)
+            except:
+                pass
+        
+        # Fallback naar de wildcard voor als er toch tijdstempels zijn
         files = glob.glob(f"tests/{prefix}_*.json")
         if not files:
             return None
-        # Pak het bestand met de meest recente wijzigingstijd
         latest_file = max(files, key=os.path.getmtime)
-        try:
-            with open(latest_file, 'r') as f:
-                return json.load(f)
-        except:
-            return None
+        with open(latest_file, 'r') as f:
+            return json.load(f)
 
     # 1. Entry Test
     stars += 1

@@ -95,12 +95,12 @@ jobs:
       - name: ⚡ 2. Performance Tests
         if: github.event_name == 'push' || github.event.inputs.run_load_test == 'true'
         run: |
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_$(date +%s).json tests/performance_test.js || true
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
 
       - name: 🏋️ 3. Load Tests
         if: github.event.inputs.run_load_test == 'true'
         run: |
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_$(date +%s).json tests/load_test.js || true
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
 
       - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
