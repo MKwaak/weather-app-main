@@ -25,24 +25,23 @@ def calculate():
     reasons.append("Entry Test: PASSED")
 
     # 2. Check Performance Baseline
+    metrics = data.get('metrics', {})
+    duration = metrics.get('http_req_duration', {})
+
+    # Check of 'values' bestaat, anders direct in de duration kijken
     data = get_latest_data('perf')  # <--- DEZE REGEL MOET ERBIJ!
-    if data and 'metrics' in data:
-        metrics = data.get('metrics', {})
-        duration = metrics.get('http_req_duration', {})
-        
-        # Check of 'values' bestaat, anders direct in de duration kijken
-        values = duration.get('values', duration)
-        p95 = values.get('p(95)', 0)
-
-        print(f"Gevonden p95: {p95}")
-
-        if p95 < 200:
-            stars += 1
-            reasons.append(f"Performance: FAST ({p95:.2f}ms)")
-        else:
-            reasons.append(f"Performance: SLOW ({p95:.2f}ms)")
+    if 'values' in duration:
+        p95 = duration['values'].get('p(95)', 0)
     else:
-        reasons.append("Performance: MISSING/FAILED")
+        p95 = duration.get('p(95)', 0)
+
+    print(f"Gevonden p95: {p95}")
+
+    if p95 < 200:
+        stars += 1
+        reasons.append(f"Performance: FAST ({p95:.2f}ms)")
+    else:
+        reasons.append(f"Performance: SLOW ({p95:.2f}ms)")
 
     # 3. Check Load Test
     data = get_latest_data('load')
