@@ -31,10 +31,7 @@ export default function () {
 }
 
 export function handleSummary(data) {
-  console.log("Rapportage wordt nu gegenereerd...");
   return {
-    // We schrijven het naar de huidige map én de tests map voor de zekerheid
-    "load-test-results.json": JSON.stringify(data),
     "tests/load-test-results.json": JSON.stringify(data),
     stdout: textSummary(data, { indent: " ", enableColors: true }),
   };

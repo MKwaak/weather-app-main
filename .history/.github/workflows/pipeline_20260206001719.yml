@@ -1,0 +1,136 @@
+name: Weather App Master Framework
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_load_test:
+        description: "Voer de k6 Load Test uit?"
+        required: true
+        type: boolean
+        default: false
+      run_chaos_test:
+        description: "Voer de Chaos Test uit?"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  # BOLLETJE 1: De Bouwer
+  build-and-push:
+    runs-on: self-hosted
+    outputs:
+      deploy_ver: ${{ steps.versioning.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versioning & HTML Inject
+        id: versioning
+        run: |
+          VERSION="2.0.${{ github.run_number }}"
+          # Injecteer versie in HTML
+          sed -i '' "s|{{VERSION}}|$VERSION|g" index.html
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Image
+        run: |
+          docker build -t mkwaak/weather-app-main:${{ steps.versioning.outputs.version }} .
+          docker push mkwaak/weather-app-main:${{ steps.versioning.outputs.version }}
+
+  # BOLLETJE 2: De Beveiliger (Parallel aan Deploy!)
+  security-scan:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: 🛡️ Trivy Scan
+        run: |
+          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:${{ needs.build-and-push.outputs.deploy_ver }}
+
+  # BOLLETJE 3: De Installateur
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    outputs:
+      service_url: ${{ steps.get_url.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: K8s Deploy & Patch
+        run: |
+          VERSION=${{ needs.build-and-push.outputs.deploy_ver }}
+          # Patch de deployment file met de nieuwe image versie
+          sed -i '' "s|mkwaak/weather-app-main:v2|mkwaak/weather-app-main:$VERSION|g" deployment.yaml
+
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+          kubectl rollout status deployment/weather-app-deployment
+
+      - name: 🔗 Get Dynamic URL
+        id: get_url
+        run: |
+          # Check of we op een Mac (Darwin) zitten
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            IP="127.0.0.1"
+          else
+            IP=$(minikube ip)
+          fi
+
+          PORT=$(kubectl get svc weather-service -o jsonpath='{.spec.ports[0].nodePort}')
+          URL="http://$IP:$PORT"
+
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Berekende URL voor $OSTYPE: $URL"
+
+  # BOLLETJE 4: De Test-Batterij (Inclusief Chaos)
+  testing:
+    needs: deploy
+    runs-on: self-hosted
+    env:
+      TEST_URL: ${{ needs.deploy.outputs.service_url }}
+    steps:
+      - name: 🔍 1. Functional Tests (Altijd)
+        run: |
+          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
+          pytest tests/test_entry.py || true
+
+      - name: ⚡ 2. Performance Tests
+        if: github.event_name == 'push' || github.event.inputs.run_load_test == 'true'
+        run: |
+          export PATH="$PATH:/usr/local/bin"
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
+
+      - name: 🏋️ 3. Load Tests
+        if: github.event.inputs.run_load_test == 'true'
+        run: |
+          export PATH="$PATH:/usr/local/bin"
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
+
+      - name: 🌪️ 4. Chaos Test
+        if: github.event.inputs.run_chaos_test == 'true'
+        run: |
+          export PATH="$PATH:/usr/local/bin:/usr/bin"
+          echo "Start Chaos Test..."
+          # Fix: Gebruik hier ook de vaste naam chaos_results.json voor de Judge!
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+          K6_PID=$!
+          sleep 10
+          kubectl delete pod -l app=weather-app --now
+          wait $K6_PID || true
+
+  # BOLLETJE 5: De Judge (Het Eindstation)
+  quality-gate:
+    needs: [security-scan, testing]
+    runs-on: self-hosted
+    steps:
+      - name: 🏆 Final Quality Assessment
+        run: |
+          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin"
+
+          # Check of er JSON resultaten zijn gegenereerd in de vorige job
+          if ls tests/*.json 1> /dev/null 2>&1; then
+            echo "✅ Resultaten gevonden. De Judge gaat nu rekenen..."
+            python3 tests/calculate_score.py # Zorg dat dit pad klopt!
+          else
+            echo "❌ Geen testresultaten gevonden! De score kan niet worden berekend."
+            echo "Tip: Check of de tests wel gedraaid hebben en of de port-forward open stond."
+            exit 1
+          fi
