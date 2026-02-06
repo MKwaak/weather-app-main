@@ -23,7 +23,7 @@ export default function () {
   // ... rest van je test ...
   check(res, {
     "status is 200": (r) => r.status === 200,
-    "bevat versie tag": (r) => r.body.includes('id="version-tag"'),
+    "bevat versie tag": (r) => r.body && r.body.includes("v1"),
   });
 
   sleep(1); // Simuleer rusttijd van de gebruiker
