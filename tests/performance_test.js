@@ -12,14 +12,15 @@ export const options = {
 };
 
 export default function () {
-  // Pak de URL uit de environment variabele die we in de YAML meegeven
-  const url = __ENV.TEST_URL || "http://127.0.0.1:52428";
+  // Gebruik de juiste poort van je tunnel
+  const url = __ENV.TEST_URL || "http://127.0.0.1:31234";
   const res = http.get(url);
-  // ... rest van je test ...
+
   check(res, {
     "status is 200": (r) => r.status === 200,
-    "versie is zichtbaar": (r) => r.body.includes("version-tag"),
+    // De veilige check: check eerst of r en r.body bestaan
+    "versie is zichtbaar": (r) => r && r.body && r.body.includes("v1.0.0"),
   });
 
-  sleep(1); // Simuleer rusttijd van de gebruiker
+  sleep(1);
 }
