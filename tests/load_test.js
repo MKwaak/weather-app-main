@@ -16,8 +16,9 @@ export const options = {
 };
 
 export default function () {
-  // Pak de URL uit de environment variabele die we in de YAML meegeven
-  const url = __ENV.TEST_URL || "http://127.0.0.1:52428";
+  // Pak de URL uit de environment variabele die we in de YAML meegeven [HARDCODED FOR LOCAL TESTING, OVERRIDE IN GITHUB ACTIONS!]
+  // [OUD] const url = __ENV.TEST_URL || "http://127.0.0.1:52428";
+  const url = __ENV.TEST_URL || "http://localhost:31234/";
   const res = http.get(url);
   // ... rest van je test ...
   check(res, {
