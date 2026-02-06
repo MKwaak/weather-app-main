@@ -28,3 +28,10 @@ export default function () {
 
   sleep(1); // Simuleer rusttijd van de gebruiker
 }
+
+export function handleSummary(data) {
+  return {
+    "tests/load-test-results.json": JSON.stringify(data),
+    stdout: textSummary(data, { indent: " ", enableColors: true }),
+  };
+}
