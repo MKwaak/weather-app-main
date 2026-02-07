@@ -20,7 +20,11 @@ def calculate():
     # Target: < 200ms is 100 punten. Elke 10ms daarboven is -1 punt.
     perf_data = get_latest_data('perf')
     if perf_data:
-        p95 = perf_data['metrics']['http_req_duration']['values']['p(95)']
+        # Zoek naar de p95, kijk zowel in 'values' als direct in de metric
+        metric = perf_data['metrics'].get('http_req_duration', {})
+        values = metric.get('values', metric) # Fallback naar de metric zelf
+        p95 = values.get('p(95)', 0)
+        
         if p95 <= 200:
             p_score = 100
         else:
@@ -30,12 +34,15 @@ def calculate():
     else:
         scores['Performance'] = 0
         details.append("Performance: No data found (0/100)")
-
+    
     # 2. Load Stability Score
-    # Lineair: 100% succes = 100 punten. 98% succes = 98 punten.
     load_data = get_latest_data('load')
     if load_data:
-        fail_rate = load_data['metrics']['http_req_failed']['values']['rate']
+        # Veilig de metric ophalen
+        metric = load_data['metrics'].get('http_req_failed', {})
+        values = metric.get('values', metric) # Gebruik 'values' of de metric zelf
+        fail_rate = values.get('rate', 0)      # Fallback naar 0 bij twijfel
+        
         l_score = int((1.0 - fail_rate) * 100)
         scores['Load'] = l_score
         details.append(f"Load Stability Index: {l_score}/100 (Success Rate: {(1.0-fail_rate)*100:.2f}%)")
@@ -44,10 +51,13 @@ def calculate():
         details.append("Load: No data found (0/100)")
 
     # 3. Chaos Resilience Score
-    # Lineair: Hoeveel procent van de requests overleefde de pod-delete?
     chaos_data = get_latest_data('chaos')
     if chaos_data:
-        fail_rate = chaos_data['metrics']['http_req_failed']['values']['rate']
+        # Veilig de metric ophalen
+        metric = chaos_data['metrics'].get('http_req_failed', {})
+        values = metric.get('values', metric)
+        fail_rate = values.get('rate', 0)
+        
         c_score = int((1.0 - fail_rate) * 100)
         scores['Chaos'] = c_score
         details.append(f"Chaos Resilience Index: {c_score}/100 (Availability: {(1.0-fail_rate)*100:.2f}%)")
