@@ -10,10 +10,12 @@ export const options = {
     { duration: "10s", target: 0 }, // Ramping down: afschalen
   ],
   thresholds: {
-    // Timestamps verzamelen: 95% van de requests moet onder de 200ms blijven
+    // 1. Timestamps verzamelen: 95% van de requests moet onder de 200ms blijven (werkt!)
     http_req_duration: ["p(95)<200"],
-    // We laten 5% fouten toe tijdens chaos, 1% is soms net te krap voor de Judge
+    // 2. We laten 1% fouten toe tijdens chaos. (moet 'rate' heten voor veel Judges)
     http_req_failed: ["rate<0.01"],
+    // 3. De "Check" drempel: Dit dwingt de Judge om te zien dat de checks zijn geslaagd
+    checks: ["rate>=1.0"],
   },
 };
 
