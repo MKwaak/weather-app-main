@@ -6,9 +6,6 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.2/index.js";
 // Hiermee vang je .60, .61 en alles in de 2.0 serie op!
 const expectedVersion = "Version:2.0.";
 
-// We zoeken nu naar het patroon 'Version:2.0.' gevolgd door cijfers
-const versionPattern = /Version:2\.0\.\d+/;
-
 console.log(
   "DEBUG: k6 gaat nu matchen op de hardcoded versie: " + expectedVersion,
 );
@@ -43,6 +40,8 @@ export default function () {
   check(res, {
     "status is 200": (r) => r.status === 200,
     "versie is correct": (r) => {
+      // Dit zoekt naar Version:2.0. en dan een getal
+      const versionPattern = /Version:2\.0\.\d+/;
       return r.body && versionPattern.test(r.body);
     },
   });
