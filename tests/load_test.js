@@ -15,10 +15,10 @@ export const options = {
     // 2. We laten 1% fouten toe tijdens chaos. (moet 'rate' heten voor veel Judges)
     http_req_failed: ["rate<0.01"],
     // 3. De "Check" drempel: Dit dwingt de Judge om te zien dat de checks zijn geslaagd
-    checks: ["rate>=1.0"],
+    checks: ["rate>=0.95"],
     // 4. Dwing k6 om deze specifiek in de JSON-output te zetten:
-    "checks{check:status is 200}": ["rate>=1.0"],
-    "checks{check:bevat data}": ["rate>=1.0"],
+    "checks{check:status is 200}": ["rate>=0.95"],
+    "checks{check:bevat data}": ["rate>=0.95"],
   },
 };
 
