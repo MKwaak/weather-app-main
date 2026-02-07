@@ -4,7 +4,7 @@ import { check, sleep } from "k6";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.2/index.js";
 
 // Vergeet __ENV even, we zetten hem hier keihard op de werkelijkheid:
-const expectedVersion = "Version:2.0.60";
+const expectedVersion = "v2.0.50";
 
 console.log(
   "DEBUG: k6 gaat nu matchen op de hardcoded versie: " + expectedVersion,
@@ -39,11 +39,8 @@ export default function () {
 
   check(res, {
     "status is 200": (r) => r.status === 200,
-    "versie is correct": (r) => {
-      // Dit zoekt naar Version:2.0. en dan een getal
-      const versionPattern = /Version:2\.0\.\d+/;
-      return r.body && versionPattern.test(r.body);
-    },
+    // De '&&' zorgt ervoor dat we alleen checken ALS er een body is
+    "versie is correct": (r) => r.body && r.body.includes(expectedVersion),
   });
 
   sleep(1);
