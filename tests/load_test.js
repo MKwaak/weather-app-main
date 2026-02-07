@@ -5,6 +5,7 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.2/index.js";
 
 // Bovenaan je script de variabele opvangen
 const expectedVersion = __ENV.TARGET_VERSION || "v2.0";
+console.log("DEBUG: k6 verwacht nu versie: " + expectedVersion);
 
 export const options = {
   stages: [
