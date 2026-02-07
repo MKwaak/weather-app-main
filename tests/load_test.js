@@ -4,7 +4,7 @@ import { check, sleep } from "k6";
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.2/index.js";
 
 // Vergeet __ENV even, we zetten hem hier keihard op de werkelijkheid:
-const expectedVersion = "v2.0.50";
+const expectedVersion = "Version:2.0.50";
 
 console.log(
   "DEBUG: k6 gaat nu matchen op de hardcoded versie: " + expectedVersion,
