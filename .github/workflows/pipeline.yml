@@ -92,6 +92,10 @@ jobs:
           export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
           pytest tests/test_entry.py || true
 
+      # HIER IS DE PERFECTE PLEK:
+      - name: ⏳ Wait for service to be ready
+        run: sleep 10
+
       - name: ⚡ 2. Performance Tests
         if: github.event_name == 'push' || github.event.inputs.run_load_test == 'true'
         run: |
@@ -100,20 +104,33 @@ jobs:
 
       - name: 🏋️ 3. Load Tests
         if: github.event.inputs.run_load_test == 'true'
+        env:
+          TARGET_VERSION: "v2.0.50" # Hier zetten we hem keihard vast
+          TEST_URL: ${{ env.TEST_URL }}
         run: |
           export PATH="$PATH:/usr/local/bin"
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
+          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL tests/load_test.js || true
 
       - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
+        env:
+          TARGET_VERSION: "v2.0.50"
         run: |
           export PATH="$PATH:/usr/local/bin:/usr/bin"
           echo "Start Chaos Test..."
-          # Fix: Gebruik hier ook de vaste naam chaos_results.json voor de Judge!
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+          # Start k6 op de achtergrond
+          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+
+          # VS Code/Git wil dit: onthoud het proces-id
           K6_PID=$!
-          sleep 10
+
+          # Geef k6 even tijd om warm te draaien (steady state)
+          sleep 20
+
+          # De Chaos klap!
           kubectl delete pod -l app=weather-app --now
+
+          # CRUCIAAL: Wacht tot k6 zijn volledige run afmaakt
           wait $K6_PID || true
 
   # BOLLETJE 5: De Judge (Het Eindstation)
