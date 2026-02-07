@@ -3,9 +3,16 @@ import { check, sleep } from "k6";
 // DEZE REGEL IS CRUCIAAL VOOR DE SUMMARY:
 import { textSummary } from "https://jslib.k6.io/k6-summary/0.0.2/index.js";
 
+// Vergeet __ENV even, we zetten hem hier keihard op de werkelijkheid:
+const expectedVersion = "v2.0.50";
+
+console.log(
+  "DEBUG: k6 gaat nu matchen op de hardcoded versie: " + expectedVersion,
+);
+
 // Bovenaan je script de variabele opvangen
-const expectedVersion = __ENV.TARGET_VERSION || "v2.0";
-console.log("DEBUG: k6 verwacht nu versie: " + expectedVersion);
+// TEMP UIT // const expectedVersion = __ENV.TARGET_VERSION || "v2.0";
+// TEMP UIT // console.log("DEBUG: k6 verwacht nu versie: " + expectedVersion);
 
 export const options = {
   stages: [
