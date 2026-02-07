@@ -94,12 +94,17 @@ jobs:
     env:
       TEST_URL: ${{ needs.deploy.outputs.service_url }}
     steps:
-      - uses: actions/checkout@v4 # Altijd even checken of je in de juiste map zit
-
       - name: 🔍 1. Functional Tests (Altijd)
         run: |
           export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
           pytest tests/test_entry.py || true
+
+      # Aan het einde van de 'testing' job:
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-reports
+          path: tests/*.json
 
       # HIER IS DE PERFECTE PLEK:
       - name: ⏳ Wait for service to be ready
@@ -114,17 +119,16 @@ jobs:
       - name: 🏋️ 3. Load Tests
         if: github.event.inputs.run_load_test == 'true'
         env:
-          TARGET_VERSION: "2.0.${{ github.run_number }}"
+          TARGET_VERSION: "v2.0.50" # Hier zetten we hem keihard vast
           TEST_URL: ${{ env.TEST_URL }}
         run: |
           export PATH="$PATH:/usr/local/bin"
-          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL --summary-export=tests/load_test_results.json tests/load_test.js || true
+          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL tests/load_test.js || true
 
       - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
         env:
-          TARGET_VERSION: 2.0.${{ github.run_number }}
-          TEST_URL: ${{ env.TEST_URL }} # <--- Vergeet deze niet mee te geven
+          TARGET_VERSION: "v2.0.50"
         run: |
           export PATH="$PATH:/usr/local/bin:/usr/bin"
           echo "Start Chaos Test..."
@@ -142,14 +146,6 @@ jobs:
 
           # CRUCIAAL: Wacht tot k6 zijn volledige run afmaakt
           wait $K6_PID || true
-
-      # Aan het einde van de 'testing' job:
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        if: always() # Zorg dat dit ALTIJD gebeurt, ook als een test faalt!
-        with:
-          name: k6-reports
-          path: tests/*.json
 
   # BOLLETJE 5: De Judge (Het Eindstation)
   quality-gate:

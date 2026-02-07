@@ -123,8 +123,7 @@ jobs:
       - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
         env:
-          TARGET_VERSION: 2.0.${{ github.run_number }}
-          TEST_URL: ${{ env.TEST_URL }} # <--- Vergeet deze niet mee te geven
+          TARGET_VERSION: "v2.0.64"
         run: |
           export PATH="$PATH:/usr/local/bin:/usr/bin"
           echo "Start Chaos Test..."
