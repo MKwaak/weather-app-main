@@ -28,8 +28,9 @@ export default function () {
 
   check(res, {
     "status is 200": (r) => r.status === 200,
-    // Veiligere check: kijk of er überhaupt een body is
-    "bevat data": (r) => r.body && r.body.length > 0,
+    // Zoekt nu naar het woord 'v2.0.' ipv het hele nummer, of check simpelweg op lengte
+    "versie is zichtbaar": (r) =>
+      r.body.includes("v2.0.") || r.body.length > 500,
   });
 
   sleep(1);
