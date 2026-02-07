@@ -31,7 +31,8 @@ export default function () {
 
   check(res, {
     "status is 200": (r) => r.status === 200,
-    "versie is correct": (r) => r.body.includes(expectedVersion),
+    // De '&&' zorgt ervoor dat we alleen checken ALS er een body is
+    "versie is correct": (r) => r.body && r.body.includes(expectedVersion),
   });
 
   sleep(1);
