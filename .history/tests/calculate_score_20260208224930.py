@@ -36,17 +36,13 @@ def calculate():
     details = []
 
     def get_latest_data(prefix):
-        # We halen 'tests/' weg omdat de artifacts in de root staan tijdens de pipeline
-        file_path = f"{prefix}_results.json" 
+        file_path = f"tests/{prefix}_results.json"
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r') as f:
                     return json.load(f)
-            except Exception as e:
-                print(f"Fout bij laden van {file_path}: {e}")
+            except:
                 pass
-        else:
-            print(f"Waarschuwing: {file_path} niet gevonden in de root.")
         return None
 
     # --- 1. Performance Score ---
