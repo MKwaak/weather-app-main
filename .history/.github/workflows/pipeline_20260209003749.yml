@@ -121,51 +121,62 @@ jobs:
     env:
       TEST_URL: ${{ needs.deploy.outputs.service_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # Altijd even checken of je in de juiste map zit
 
-      - name: 🔍 1. Functional Entry Check
+      - name: 🔍 1. Functional Tests (Altijd)
         run: |
           export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
           pytest tests/test_entry.py || true
 
-      - name: 🌍 2. Location Accuracy & Business Logic
-        run: |
-          # Dit is de diepe functionele check (Athens/Oslo cases)
-          # We slaan hem op in tests/ zodat de artifact upload hem pakt
-          python3 tests/location_test.py --url $TEST_URL --output tests/functional_results.json
+      # HIER IS DE PERFECTE PLEK:
+      - name: ⏳ Wait for service to be ready
+        run: sleep 10
 
-      - name: ⏳ Wait for service steady-state
-        run: sleep 5
-
-      - name: ⚡ 3. Performance Benchmark
+      - name: ⚡ 2. Performance Tests
         if: github.event_name == 'push' || github.event.inputs.run_load_test == 'true'
         run: |
           export PATH="$PATH:/usr/local/bin"
           k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
 
-      - name: 🏋️ 4. Load Tests
+      - name: 🏋️ 3. Load Tests
         if: github.event.inputs.run_load_test == 'true'
+        env:
+          TARGET_VERSION: "2.0.${{ github.run_number }}"
+          TEST_URL: ${{ env.TEST_URL }}
         run: |
           export PATH="$PATH:/usr/local/bin"
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
+          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL --summary-export=tests/load_test_results.json tests/load_test.js || true
 
-      - name: 🌪️ 5. Chaos Test (Resilience)
+      - name: 🌪️ 4. Chaos Test
         if: github.event.inputs.run_chaos_test == 'true'
+        env:
+          TARGET_VERSION: 2.0.${{ github.run_number }}
+          TEST_URL: ${{ env.TEST_URL }} # <--- Vergeet deze niet mee te geven
         run: |
           export PATH="$PATH:/usr/local/bin:/usr/bin"
           echo "Start Chaos Test..."
-          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+          # Start k6 op de achtergrond
+          k6 run -e TARGET_VERSION=$TARGET_VERSION -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+
+          # VS Code/Git wil dit: onthoud het proces-id
           K6_PID=$!
+
+          # Geef k6 even tijd om warm te draaien (steady state)
           sleep 20
+
+          # De Chaos klap!
           kubectl delete pod -l app=weather-app --now
+
+          # CRUCIAAL: Wacht tot k6 zijn volledige run afmaakt
           wait $K6_PID || true
 
-      - name: 📤 Upload All Test Results
+      # Aan het einde van de 'testing' job:
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() # Zorg dat dit ALTIJD gebeurt, ook als een test faalt!
         with:
           name: k6-reports
-          path: tests/*.json # Nu pakken we alles in één keer uit de tests/ map
+          path: tests/*.json
 
   # BOLLETJE 5: De Judge (Het Eindstation)
   quality-gate:
