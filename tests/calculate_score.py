@@ -36,7 +36,7 @@ def calculate():
         details.append("Performance: No data found (0/100)")
     
     # 2. Load Stability Score
-    load_data = get_latest_data('load')
+    load_data = get_latest_data('load_test')
     if load_data:
         # Veilig de metric ophalen
         metric = load_data['metrics'].get('http_req_failed', {})
