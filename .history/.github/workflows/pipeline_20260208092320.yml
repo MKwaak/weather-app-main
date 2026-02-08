@@ -17,71 +17,67 @@ on:
         default: false
 
 jobs:
-  # STAP 1: Scannen, Bouwen en Pushen (De "Fabriek")
-  scan-build-and-push:
-    runs-on: self-hosted
-    outputs:
-      deploy_ver: ${{ steps.versioning.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Nodig voor SonarCloud historie
-
-      # De Uitsmijter: Eerst scannen!
+  # BOLLETJE 0: De Scan
       - name: 🔍 SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      # Alleen als scan slaagt: Versie bepalen
-      - name: 🏷️ Versioning & HTML Inject
+  # BOLLETJE 1: De Bouwer
+  build-and-push:
+    runs-on: self-hosted
+    outputs:
+      deploy_ver: ${{ steps.versioning.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Belangrijk voor SonarQube om historie te zien!
+
+      - name: Versioning & HTML Inject
         id: versioning
         run: |
           MAJOR=2
           MINOR=1
           PATCH=${{ github.run_number }}
           SEMVER="${MAJOR}.${MINOR}.${PATCH}"
-          # Injecteer versie in HTML
+
+          # Injecteer versie in HTML (Let op: op Linux/GitHub Runners is 'sed -i' vaak zonder '')
           sed -i "s|{{VERSION}}|$SEMVER|g" index.html
+
           echo "version=$SEMVER" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$SEMVER" >> $GITHUB_ENV
 
-      # Image bouwen en naar Docker Hub (of jouw registry)
-      - name: 🐳 Build & Push Docker Image
-        run: |
-          VERSION=${{ steps.versioning.outputs.version }}
-          docker build -t mkwaak/weather-app-main:$VERSION .
-          docker push mkwaak/weather-app-main:$VERSION
-
-  # STAP 2: De Beveiliger (Start zodra de image er is)
+  # BOLLETJE 2: De Beveiliger (Parallel aan Deploy!)
   security-scan:
-    needs: scan-build-and-push
+    needs: build-and-push
     runs-on: self-hosted
     steps:
       - name: 🛡️ Trivy Scan
         run: |
-          VERSION=${{ needs.scan-build-and-push.outputs.deploy_ver }}
-          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:$VERSION
+          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:${{ needs.build-and-push.outputs.deploy_ver }}
 
+      # Aan het einde van de 'security-scan' job:
       - name: Upload Security Result
         uses: actions/upload-artifact@v4
         with:
           name: security-report
           path: tests/security_results.json
 
-  # STAP 3: De Installateur (Start na de build)
+  # BOLLETJE 3: De Installateur
   deploy:
-    needs: scan-build-and-push
+    needs: build-and-push
     runs-on: self-hosted
     outputs:
       service_url: ${{ steps.get_url.outputs.url }}
     steps:
       - uses: actions/checkout@v4
-      - name: ☸️ K8s Deploy & Patch
+      - name: K8s Deploy & Patch
         run: |
-          VERSION=${{ needs.scan-build-and-push.outputs.deploy_ver }}
-          # Patch deployment (sed syntax geoptimaliseerd voor Linux/Mac)
-          sed -i "s|mkwaak/weather-app-main:.*|mkwaak/weather-app-main:$VERSION|g" deployment.yaml
+          VERSION=${{ needs.build-and-push.outputs.deploy_ver }}
+          # Patch de deployment file met de nieuwe image versie
+          sed -i '' "s|mkwaak/weather-app-main:v2|mkwaak/weather-app-main:$VERSION|g" deployment.yaml
 
           kubectl apply -f deployment.yaml
           kubectl apply -f service.yaml
@@ -90,15 +86,17 @@ jobs:
       - name: 🔗 Get Dynamic URL
         id: get_url
         run: |
+          # Check of we op een Mac (Darwin) zitten
           if [[ "$OSTYPE" == "darwin"* ]]; then
             IP="127.0.0.1"
           else
             IP=$(minikube ip)
           fi
+
           PORT=$(kubectl get svc weather-service -o jsonpath='{.spec.ports[0].nodePort}')
           URL="http://$IP:$PORT"
+
           echo "url=$URL" >> $GITHUB_OUTPUT
-          # Deze regel is essentieel voor je eigen controle in de logs:
           echo "Berekende URL voor $OSTYPE: $URL"
 
   # BOLLETJE 4: De Test-Batterij (Inclusief Chaos)
