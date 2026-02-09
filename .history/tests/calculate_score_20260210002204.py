@@ -97,7 +97,3 @@ def calculate():
 
 if __name__ == "__main__":
     calculate()
-
-# Voeg dit toe aan het einde van calculate() in Python:
-with open("quality_history.csv", "a") as f:
-    f.write(f"{version},{cqi_score},{rqi_score}\n")

@@ -44,38 +44,31 @@ jobs:
       - name: 🏷️ Versioning & HTML Inject
         id: versioning
         run: |
-          # 1. Pad naar het bestand op je Mac (self-hosted runner pad)
-          VERSION_FILE="VERSION"
+          # 1. Haal de huidige versie op uit het VERSION bestand (fallback naar 2.1.0)
+          CURRENT_VERSION=$(cat VERSION 2>/dev/null || echo "2.1.0")
 
-          # 2. Lees huidige versie of start bij basis
-          CURRENT_VERSION=$(cat $VERSION_FILE 2>/dev/null || echo "2.1.94")
-
-          # 3. Splitsen
+          # 2. Splits de versie in MAJOR, MINOR en PATCH
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
 
-          # 4. Check commit message voor #minor
-          # Gebruik de github context om de message te scannen
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-
-          if [[ "$COMMIT_MSG" == *"#minor"* ]]; then
+          # 3. Logica: Als "#minor" in de commit message staat, verhoog Minor en reset Patch.
+          # Anders verhoog alleen de Patch.
+          if [[ "${{ github.event.head_commit.message }}" == *"#minor"* ]]; then
             MINOR=$((MINOR + 1))
             PATCH=0
-            echo "✨ Minor update gedetecteerd"
           else
             PATCH=$((PATCH + 1))
-            echo "🐞 Patch update gedetecteerd"
           fi
 
           SEMVER="${MAJOR}.${MINOR}.${PATCH}"
-          echo "NEW_VERSION=$SEMVER"
+          echo "Nieuwe versie wordt: $SEMVER"
 
-          # 5. Opslaan voor de VOLGENDE run (lokaal op je Mac)
-          echo "$SEMVER" > $VERSION_FILE
+          # 4. Sla de nieuwe versie op voor de volgende run
+          echo "$SEMVER" > VERSION
 
-          # 6. Injecteren in de huidige build
+          # 5. Injecteer in HTML
           sed -i.bak "s/{{VERSION}}/${SEMVER}/g" index.html && rm index.html.bak
 
-          # 7. Omgevingsvariabelen voor de rest van de pipeline
+          # 6. Geef de versie door aan GitHub Env en Output
           echo "APP_VERSION=$SEMVER" >> $GITHUB_ENV
           echo "version=$SEMVER" >> $GITHUB_OUTPUT
 
@@ -211,8 +204,7 @@ jobs:
 
       - name: 🏆 Final Quality Assessment
         env:
-          APP_VERSION: ${{ env.APP_VERSION }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          TEST_URL: "http://127.0.0.1:57974"
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # DIT IS DE KEY VOOR DE 100 PUNTEN
         run: |
+          # We draaien het script nu vanuit de root
           python3 tests/calculate_score.py
