@@ -79,7 +79,7 @@ async function getGeoData(search) {
     }
 
     // 🔹 Load location and weather
-    loadLocationData(result, selected); // optional: show full list to user later
+    loadLocationData(result); // optional: show full list to user later
     getWeatherData(currentLat, currentLon);
   } catch (error) {
     console.error(error.message);
@@ -88,12 +88,9 @@ async function getGeoData(search) {
 }
 
 // Update city, country, date
-function loadLocationData(locationData, selectedResult = null) {
-  // Als we een specifiek geselecteerd resultaat hebben, gebruik die.
-  // Anders vallen we terug op de eerste in de lijst.
-  const address = selectedResult
-    ? selectedResult.address
-    : locationData[0].address;
+function loadLocationData(locationData) {
+  // 1. We pakken de data uit het eerste resultaat
+  const address = locationData[0].address;
 
   // 2. De "slimme zoektocht" naar de stadsnaam (deze was al goed!)
   const city =

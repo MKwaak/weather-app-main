@@ -79,7 +79,7 @@ async function getGeoData(search) {
     }
 
     // 🔹 Load location and weather
-    loadLocationData(result, selected); // optional: show full list to user later
+    loadLocationData(result); // optional: show full list to user later
     getWeatherData(currentLat, currentLon);
   } catch (error) {
     console.error(error.message);
