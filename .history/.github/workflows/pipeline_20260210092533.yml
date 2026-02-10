@@ -124,7 +124,7 @@ jobs:
 
           # 2. Forceer de update direct in het cluster (deze is leidend!)
           kubectl apply -f deployment.yaml
-          kubectl set image deployment/weather-app-deployment $(kubectl get deployment weather-app-deployment -o jsonpath='{.spec.template.spec.containers[0].name}')=mkwaak/weather-app-main:$VERSION
+          kubectl set image deployment/weather-app-deployment weather-app-=mkwaak/weather-app-main:$VERSION
 
           # 3. Wachten tot het live staat
           kubectl rollout status deployment/weather-app-deployment
