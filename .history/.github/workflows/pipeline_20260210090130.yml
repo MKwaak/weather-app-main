@@ -91,19 +91,16 @@ jobs:
     needs: scan-build-and-push
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4 # Zorg dat de tests/ map aanwezig is
-
       - name: 🛡️ Trivy Scan
         run: |
           VERSION=${{ needs.scan-build-and-push.outputs.deploy_ver }}
-          mkdir -p tests # Zorg dat de map bestaat
-          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output tests/security_results.json mkwaak/weather-app-main:$VERSION
+          trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output   security_results.json mkwaak/weather-app-main:$VERSION
 
       - name: Upload Security Result
         uses: actions/upload-artifact@v4
         with:
           name: security-report
-          path: tests/security_results.json
+          path: security_results.json
 
   # STAP 3: De Installateur (Start na de build)
   deploy:
@@ -152,9 +149,6 @@ jobs:
       TEST_URL: "http://localhost:57974"
     steps:
       - uses: actions/checkout@v4
-
-      - name: 📂 Prepare Test Directory
-        run: mkdir -p tests
 
       - name: 🚪 Entry Check
         run: |

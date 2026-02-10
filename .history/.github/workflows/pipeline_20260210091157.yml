@@ -153,9 +153,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📂 Prepare Test Directory
-        run: mkdir -p tests
-
       - name: 🚪 Entry Check
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:57974/health || echo "000")
