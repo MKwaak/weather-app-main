@@ -185,13 +185,13 @@ jobs:
 
       - name: 🚪 Entry Check
         run: |
-          # We gebruiken nu de shell variabele $APP_PORT direct
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$APP_PORT/health || echo "000")
+          # Gebruik de variabele $APP_PORT in de curl en de logging
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${{ env.APP_PORT }}/health || echo "000")
 
           if [ "$STATUS" == "200" ]; then
-            echo "{\"score\": 100, \"detail\": \"App up on port $APP_PORT\"}" > tests/entry_results.json
+            echo "{\"score\": 100, \"detail\": \"App up on port ${{ env.APP_PORT }}\"}" > tests/entry_results.json
           else
-            echo "{\"score\": 0, \"detail\": \"App unreachable on port $APP_PORT\"}" > tests/entry_results.json
+            echo "{\"score\": 0, \"detail\": \"App unreachable on port ${{ env.APP_PORT }}\"}" > tests/entry_results.json
           fi
 
       - name: 🔍 1. Functional Entry Check
