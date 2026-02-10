@@ -250,7 +250,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: security-report
-          path: tests/ # Belangrijk: zet ze in de tests map
+          path: . # We downloaden alles naar de root voor het gemak
 
       - name: Download k6 Reports
         uses: actions/download-artifact@v4
@@ -264,8 +264,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           # Koppeling van de input naar de Judge:
           OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
-          # APP_PORT wordt nu van de root-env gepakt
+          APP_PORT: ${{ env.APP_PORT }}
         run: |
-          # Een kleine extra check in de logs om te zien of alles er staat
-          ls -R tests/
           python3 tests/calculate_score.py

@@ -20,11 +20,6 @@ on:
         type: boolean
         default: false
 
-# DIT IS DE JUISTE PLEK: Op hetzelfde niveau als 'on' en 'jobs'
-env:
-  APP_PORT: "57974"
-  TEST_URL: "http://localhost:57974"
-
 jobs:
   # STAP 1: Scannen, Bouwen en Pushen (De "Fabriek")
   scan-build-and-push:
@@ -243,20 +238,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📂 Create Test Dir
-        run: mkdir -p tests # Zorg dat de map er is voor de downloads
-
       - name: Download Security Report
         uses: actions/download-artifact@v4
         with:
           name: security-report
-          path: tests/ # Belangrijk: zet ze in de tests map
+          path: . # We downloaden alles naar de root voor het gemak
 
       - name: Download k6 Reports
         uses: actions/download-artifact@v4
         with:
           name: k6-reports
-          path: tests/ # Belangrijk: zet ze in de tests map
+          path: .
 
       - name: 🏆 Final Quality Assessment
         env:
@@ -264,8 +256,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           # Koppeling van de input naar de Judge:
           OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
-          # APP_PORT wordt nu van de root-env gepakt
+          APP_PORT: ${{ env.APP_PORT }}
         run: |
-          # Een kleine extra check in de logs om te zien of alles er staat
-          ls -R tests/
           python3 tests/calculate_score.py
