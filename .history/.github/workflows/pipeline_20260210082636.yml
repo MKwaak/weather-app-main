@@ -162,7 +162,9 @@ jobs:
 
       - name: 🌍 2. Location Accuracy & Business Logic
         run: |
-          python3 tests/location_test.py --url $TEST_URL --output tests/accuracy_results.json
+          # Dit is de diepe functionele check (Athens/Oslo cases)
+          # We slaan hem op in tests/ zodat de artifact upload hem pakt
+          python3 tests/location_test.py --url $TEST_URL --output tests/functional_results.json
 
       - name: ⏳ Wait for service steady-state
         run: sleep 5
