@@ -2,13 +2,9 @@ name: Weather App Master Framework
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
     inputs:
-      override_reason:
-        description: "Reden voor handmatige goedkeuring (Stakeholder Override)"
-        required: false
-        default: ""
       run_load_test:
         description: "Voer de k6 Load Test uit?"
         required: true
@@ -243,8 +239,6 @@ jobs:
         env:
           APP_VERSION: ${{ needs.scan-build-and-push.outputs.deploy_ver }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Koppeling van de input naar de Judge:
           OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
-          APP_PORT: ${{ env.APP_PORT }}
         run: |
           python3 tests/calculate_score.py

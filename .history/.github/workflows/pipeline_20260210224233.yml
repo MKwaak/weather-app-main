@@ -243,8 +243,6 @@ jobs:
         env:
           APP_VERSION: ${{ needs.scan-build-and-push.outputs.deploy_ver }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Koppeling van de input naar de Judge:
           OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
-          APP_PORT: ${{ env.APP_PORT }}
         run: |
           python3 tests/calculate_score.py

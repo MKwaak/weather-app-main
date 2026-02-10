@@ -2,13 +2,9 @@ name: Weather App Master Framework
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
     inputs:
-      override_reason:
-        description: "Reden voor handmatige goedkeuring (Stakeholder Override)"
-        required: false
-        default: ""
       run_load_test:
         description: "Voer de k6 Load Test uit?"
         required: true
@@ -149,12 +145,11 @@ jobs:
 
   # BOLLETJE 4: De Test-Batterij (Inclusief Chaos)
   testing:
-    needs: [deploy, security-scan]
+    needs: [deploy, security-scan] # Wacht op de deploy EN de scan
     runs-on: self-hosted
     env:
-      # CENTRALE PLEK VOOR DE POORT
-      APP_PORT: "57974" # Hardocoded voor de curl checks, we gebruiken de URL variabele voor k6
-      TEST_URL: "http://localhost:57974" # We gebruiken hier nog even de volledige URL voor k6
+      # We negeren even de output van deploy en pakken de actieve tunnel
+      TEST_URL: "http://localhost:57974"
     steps:
       - uses: actions/checkout@v4
 
@@ -165,17 +160,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: security-report
-          path: tests/
+          path: tests/ # Zet de JSON weer terug in de tests map
 
       - name: 🚪 Entry Check
         run: |
-          # Gebruik de variabele $APP_PORT in de curl en de logging
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${{ env.APP_PORT }}/health || echo "000")
-
+          mkdir -p tests
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:57974/health || echo "000")
           if [ "$STATUS" == "200" ]; then
-            echo "{\"score\": 100, \"detail\": \"App up on port ${{ env.APP_PORT }}\"}" > tests/entry_results.json
+            echo '{"score": 100, "detail": "App is up and running"}' > tests/entry_results.json
           else
-            echo "{\"score\": 0, \"detail\": \"App unreachable on port ${{ env.APP_PORT }}\"}" > tests/entry_results.json
+            echo '{"score": 0, "detail": "App unreachable on port 57974"}' > tests/entry_results.json
           fi
 
       - name: 🔍 1. Functional Entry Check
@@ -241,10 +235,9 @@ jobs:
 
       - name: 🏆 Final Quality Assessment
         env:
+          # Pak de versie uit de build-output in plaats van lokale env
           APP_VERSION: ${{ needs.scan-build-and-push.outputs.deploy_ver }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Koppeling van de input naar de Judge:
-          OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
-          APP_PORT: ${{ env.APP_PORT }}
+          TEST_URL: "http://127.0.0.1:57974"
         run: |
           python3 tests/calculate_score.py
