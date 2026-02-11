@@ -22,8 +22,8 @@ on:
 
 # DIT IS DE JUISTE PLEK: Op hetzelfde niveau als 'on' en 'jobs'
 env:
-  APP_PORT: "57974"
-  TEST_URL: "http://localhost:57974"
+  APP_PORT: "31234"
+  TEST_URL: "http://localhost:31234"
 
 jobs:
   # STAP 1: Scannen, Bouwen en Pushen (De "Fabriek")
@@ -193,17 +193,20 @@ jobs:
           path: tests/
 
       - name: 🚪 Entry Check
+        env:
+          # Gebruik de poort die we uit de deploy job hebben gekregen
+          ACTUAL_PORT: ${{ needs.deploy.outputs.actual_port }}
+          ACTUAL_URL: ${{ needs.deploy.outputs.service_url }}
         run: |
-          echo "Wachten op service op localhost:$APP_PORT..."
-          sleep 10
+          echo "Wachten op service op $ACTUAL_URL..."
+          sleep 15
 
-          # We gebruiken hier de globale $APP_PORT variabele van bovenin je YAML
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT/health || echo "000")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $ACTUAL_URL/health || echo "000")
 
           if [ "$STATUS" == "200" ]; then
-            echo "{\"score\": 100, \"detail\": \"App up on port $APP_PORT\"}" > tests/entry_results.json
+            echo "{\"score\": 100, \"detail\": \"App up on $ACTUAL_URL\"}" > tests/entry_results.json
           else
-            echo "{\"score\": 0, \"detail\": \"App unreachable on port $APP_PORT (Status: $STATUS)\"}" > tests/entry_results.json
+            echo "{\"score\": 0, \"detail\": \"App unreachable on $ACTUAL_URL (Status: $STATUS)\"}" > tests/entry_results.json
           fi
 
       - name: 🔍 1. Functional Entry Check
