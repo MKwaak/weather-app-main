@@ -1,0 +1,16 @@
+# STAGE 1: Build layer
+FROM node:lts-alpine AS build-stage
+WORKDIR /app
+COPY . .
+
+# De 'ontvanger' voor de versie uit de pipeline
+ARG APP_VERSION=unknown
+
+# Vervang de placeholder dynamisch in je code
+RUN find . -type f -name "*.html" -o -name "*.js" | xargs sed -i "s/{{VERSION}}/${APP_VERSION}/g"
+
+# STAGE 2: Production layer
+FROM nginx:stable-alpine AS production-stage
+COPY --from=build-stage /app /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
