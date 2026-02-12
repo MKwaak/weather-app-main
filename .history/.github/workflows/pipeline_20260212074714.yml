@@ -74,13 +74,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=MKwaak_weather-app-main
-            -Dsonar.organization=mkwaak
             -Dsonar.projectVersion=${{ steps.versioning.outputs.version }}
             -Dsonar.sources=.
-            -Dsonar.python.version=3.9
             -Dsonar.exclusions=tests/**,**/node_modules/**
-            -Dsonar.working.directory=.sonar
 
       # Image bouwen en naar Docker Hub (of jouw registry)
       - name: 🐳 Build & Push Docker Image
