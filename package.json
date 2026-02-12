@@ -7,13 +7,13 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest tests/unit_weather.test.js --coverage"
   },
   "jest": {
     "testEnvironment": "jsdom",
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/actions-runner/"
+      "node_modules",
+      "actions-runner"
     ]
   },
   "keywords": [],
