@@ -3,17 +3,13 @@
   "version": "1.0.0",
   "main": "script.js",
   "scripts": {
-    "test": "jest --passWithNoTests"
+    "test": "jest --coverage"
   },
   "jest": {
     "testEnvironment": "jsdom",
     "rootDir": ".",
     "testMatch": [
       "<rootDir>/tests/unit_weather.test.js"
-    ],
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "script.js"
     ],
     "testPathIgnorePatterns": [
       "node_modules",
