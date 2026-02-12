@@ -2,28 +2,14 @@
  * @jest-environment jsdom
  */
 
-// 1. Fake de HTML-elementen die script.js direct nodig heeft bij het laden
-document.body.innerHTML = `
-  <select id="ddlUnits"></select>
-  <div id="divCityCountry"></div>
-  <div id="divCurrentDate"></div>
-  <div id="divCurrentTemp"></div>
-  <form class="hero__search">
-    <input id="search" />
-  </form>
-  <div id="dailyForecast"></div>
-  <div id="hourlyForecast"></div>
-  <select id="hourlyDay"></select>
-`;
-
-// 2. Nu pas script.js inladen (nu vindt hij de elementen wel!)
+// We importeren de functies uit het echte script.js bestand
 const {
   selectLocation,
   getCityName,
   getWeatherIconName,
 } = require("../script.js");
 
-describe("Weather App Logic Tests", () => {
+describe("Weather App Logic Tests (Integration with script.js)", () => {
   test("EU Prioriteit: Moet NL kiezen boven US", () => {
     const mockData = [
       { address: { country_code: "us" } },
@@ -40,6 +26,7 @@ describe("Weather App Logic Tests", () => {
   });
 
   test("Icon Mapper: Code 0 moet sunny teruggeven", () => {
-    expect(getWeatherIconName(0)).toBe("icon-sunny.webp");
+    const icon = getWeatherIconName(0);
+    expect(icon).toBe("icon-sunny.webp");
   });
 });

@@ -10,11 +10,7 @@
     "test": "jest"
   },
   "jest": {
-    "testEnvironment": "jsdom",
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/actions-runner/"
-    ]
+    "testEnvironment": "jsdom"
   },
   "keywords": [],
   "author": "",
