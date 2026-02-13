@@ -56,18 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Belangrijk voor SonarCloud analyse
-
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20" # Gebruik een stabiele LTS versie
-
+          fetch-depth: 0
       - name: 📥 Download Coverage
         uses: actions/download-artifact@v4
         with:
           name: unit-test-coverage
-          path: coverage # Dit zet het bestand in de 'coverage' map
+          path: .
 
       - name: 🏷️ Versioning & HTML Inject
         id: versioning
@@ -85,6 +79,11 @@ jobs:
           echo "$SEMVER" > $VERSION_FILE
           sed -i.bak "s/{{VERSION}}/${SEMVER}/g" index.html && rm index.html.bak
           echo "version=$SEMVER" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Gebruik een stabiele LTS versie
 
       - name: 🔍 SonarCloud Scan
         # We gebruiken hier sonarcloud-github-action, de officiële voor SonarCloud
