@@ -98,11 +98,10 @@ jobs:
             -Dsonar.organization=mkwaak
             -Dsonar.projectVersion=${{ steps.versioning.outputs.version }}
             -Dsonar.sources=.
-            -Dsonar.projectBaseDir=.
             -Dsonar.exclusions=tests/**,**/node_modules/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.projectBaseDir=.
             -Dsonar.working.directory=.scannerwork
-            -Dsonar.verbose=true
 
       - name: 🐳 Build & Push Docker Image
         run: |
