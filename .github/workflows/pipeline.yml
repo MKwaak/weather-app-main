@@ -40,7 +40,11 @@ jobs:
         run: npm install
 
       - name: 🧪 Run Jest Unit Tests
-        run: npm test -- --coverage --watchAll=false
+        run: |
+          # We bepalen het exacte pad op de Mac en voeren dat direct aan Jest
+          TEST_FILE=$(find $(pwd)/tests -name "unit_weather.test.js")
+          echo "Draaien van test op: $TEST_FILE"
+          npx jest $TEST_FILE --coverage --coverageReporters="lcov" --coverageReporters="text" --watchAll=false
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
