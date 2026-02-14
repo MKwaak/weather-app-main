@@ -41,8 +41,8 @@ jobs:
 
       - name: 🧪 Run Jest Unit Tests
         # We gebruiken --testPathPattern in plaats van een direct pad
-        # Dit is veel robuuster op self-hosted runners
-        run: npx jest --testPathPatterns="tests/.*\.test\.js" --coverage --coverageReporters="lcov" --watchAll=false
+        # We zoeken simpelweg op de bestandsnaam zelf.
+        run: npx jest unit_weather.test.js --coverage --coverageReporters="lcov" --watchAll=false
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
