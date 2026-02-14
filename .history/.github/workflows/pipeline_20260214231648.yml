@@ -1,0 +1,223 @@
+name: Weather App Refinery Framework (v2.0)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      override_reason:
+        description: "Reden voor handmatige goedkeuring"
+        required: false
+        default: ""
+
+env:
+  APP_PORT: "57974"
+  TEST_URL: "http://localhost:57974"
+
+jobs:
+  # --- STAGE 0: REFINERY INTAKE (Versioning) ---
+  versioning:
+    runs-on: ubuntu-latest
+    # Voeg dit blok toe:
+    permissions:
+      contents: write
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔢 Calculate Next Version
+        id: bump
+        run: |
+          # Haal laatste tag op of start bij 1.0.0
+          LATEST_TAG=$(git tag --sort=-v:refname | head -n 1 | sed 's/v//')
+          if [ -z "$LATEST_TAG" ]; then LATEST_TAG="1.0.0"; fi
+
+          IFS='.' read -r major minor patch <<< "$LATEST_TAG"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+
+          if [[ "$COMMIT_MSG" == *"#major"* ]]; then
+            NEW_VER="$((major + 1)).0.0"
+          elif [[ "$COMMIT_MSG" == *"#minor"* ]]; then
+            NEW_VER="${major}.$((minor + 1)).0"
+          else
+            NEW_VER="${major}.${minor}.$((patch + 1))"
+          fi
+
+          echo "new_version=$NEW_VER" >> $GITHUB_OUTPUT
+          echo "🚀 Refinery Versioning: $NEW_VER"
+
+      - name: 🏷️ Create Tag
+        run: |
+          git config user.name "Refinery Bot"
+          git config user.email "refinery@qa.internal"
+          git tag v${{ steps.bump.outputs.new_version }}
+          git push origin v${{ steps.bump.outputs.new_version }}
+
+  # --- STAGE 1: CI (Universele Test Machine) ---
+  unit-tests:
+    needs: versioning
+    runs-on: ubuntu-latest
+    container:
+      image: node:20-bullseye
+    steps:
+      - uses: actions/checkout@v4
+      - name: ⚙️ Read Refinery Config
+        id: config
+        run: |
+          TEST_CMD=$(node -p "require('./refinery-config.json').testCommand")
+          COV_PATH=$(node -p "require('./refinery-config.json').coveragePath")
+          echo "TEST_EXEC_CMD=$TEST_CMD" >> $GITHUB_ENV
+          echo "COVERAGE_RESULT_PATH=$COV_PATH" >> $GITHUB_ENV
+      - name: 📦 Install & Test
+        run: |
+          npm install
+          ${{ env.TEST_EXEC_CMD }}
+      - name: 📤 Export Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: ${{ env.COVERAGE_RESULT_PATH }}
+
+  # --- STAGE 2: QUALITY & BUILD (The Refinery Engine) ---
+  scan-build-and-push:
+    needs: [versioning, unit-tests]
+    runs-on: self-hosted
+    outputs:
+      deploy_ver: ${{ needs.versioning.outputs.new_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Refinery Context
+        id: context
+        run: |
+          SONAR_KEY=$(node -p "require('./refinery-config.json').sonarProjectKey")
+          echo "SONAR_KEY=$SONAR_KEY" >> $GITHUB_ENV
+
+          # HTML Injectie
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          sed -i.bak "s/{{VERSION}}/${VERSION}/g" index.html && rm index.html.bak
+
+      - name: 📥 Download & Fix Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage
+
+      - name: 🛠️ Fix Paden voor Sonar
+        run: |
+          # Zorgt dat Sonar de Linux-paden uit de container snapt op de Mac
+          sed -i.bak 's|SF:.*/|SF:|g' coverage/lcov.info
+
+      - name: 🔍 SonarCloud Scan (Universal)
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_KEY }}
+            -Dsonar.organization=mkwaak
+            -Dsonar.projectVersion=${{ needs.versioning.outputs.new_version }}
+            -Dsonar.sources=.
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.exclusions=tests/**,**/node_modules/**
+
+      - name: 🐳 Build & Push Docker Image
+        run: |
+          VERSION=${{ needs.versioning.outputs.new_version }}
+          docker build --build-arg APP_VERSION=$VERSION -t mkwaak/weather-app-main:$VERSION .
+          docker push mkwaak/weather-app-main:$VERSION
+
+  # --- STAGE 3: SECURITY, DEPLOY & TEST LAB ---
+  security-scan:
+    needs: scan-build-and-push
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🛡️ Trivy Scan
+        run: |
+          mkdir -p tests
+          trivy image --severity HIGH,CRITICAL --format json --output tests/security_results.json mkwaak/weather-app-main:${{ needs.scan-build-and-push.outputs.deploy_ver }}
+      - name: 📤 Upload Security Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: tests/security_results.json
+
+  deploy:
+    needs: scan-build-and-push
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: ☸️ K8s Deploy
+        run: |
+          VERSION=${{ needs.scan-build-and-push.outputs.deploy_ver }}
+          sed -i.bak "s|mkwaak/weather-app-main:.*|mkwaak/weather-app-main:$VERSION|g" deployment.yaml
+          kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/weather-app-deployment
+
+  # --- STAGE 4: EVALUATION (Entry, Perf & Functional) ---
+  entry-and-functional:
+    needs: deploy
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🚪 Entry Check & Functional
+        run: |
+          mkdir -p tests
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT/ || echo "000")
+          echo "{\"score\": $( [ "$STATUS" == "200" ] && echo 100 || echo 0 ), \"detail\": \"Status: $STATUS\"}" > tests/entry_results.json
+          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
+          python3 tests/location_test.py --url $TEST_URL --output tests/accuracy_results.json
+      - name: 📤 Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: entry-results
+          path: tests/*.json
+
+  performance-benchmark:
+    needs: entry-and-functional
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: ⚡ k6 Benchmark
+        run: |
+          mkdir -p tests
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
+      - name: 📤 Upload Perf
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: tests/perf_results.json
+
+  # --- STAGE 5: THE JUDGE ---
+  quality-gate:
+    needs:
+      [
+        versioning,
+        scan-build-and-push,
+        security-scan,
+        entry-and-functional,
+        performance-benchmark,
+      ]
+    if: always()
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 📂 Collect Results
+        uses: actions/download-artifact@v4
+        with:
+          path: tests/
+          merge-multiple: true
+      - name: 🏆 Final Quality Assessment
+        env:
+          APP_VERSION: ${{ needs.versioning.outputs.new_version }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          python3 tests/calculate_score.py
