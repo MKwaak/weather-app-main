@@ -27,10 +27,11 @@ env:
   TEST_URL: "http://localhost:57974"
 
 jobs:
-  # --- STAGE 1: CI (De Universele Machine) ---
+  # --- STAGE 1: CI (De Universele Machine in de Cloud) ---
   unit-tests:
-    runs-on: self-hosted
-    # Gebruik een specifieke container om de 'Mac-vloek' te omzeilen
+    # We verhuizen naar de GitHub Cloud voor Docker-ondersteuning
+    runs-on: ubuntu-latest
+
     container:
       image: node:20-bullseye
 
@@ -44,29 +45,23 @@ jobs:
         id: config
         run: |
           if [ ! -f refinery-config.json ]; then
-            echo "❌ FOUT: refinery-config.json niet gevonden in de app-root!"
+            echo "❌ FOUT: refinery-config.json niet gevonden!"
             exit 1
           fi
-
-          # Haal de commando's en paden op uit de configuratie
           TEST_CMD=$(node -p "require('./refinery-config.json').testCommand")
           COV_PATH=$(node -p "require('./refinery-config.json').coveragePath || 'coverage/lcov.info'")
 
           echo "TEST_EXEC_CMD=$TEST_CMD" >> $GITHUB_ENV
           echo "COVERAGE_RESULT_PATH=$COV_PATH" >> $GITHUB_ENV
+          echo "✅ Config geladen voor Cloud Runner"
 
-          echo "✅ Config geladen: $TEST_CMD"
+      - name: 📦 3. Setup Environment
+        run: npm install
 
-      - name: 📦 3. Setup Environment (Install)
-        run: |
-          # We doen dit in de container, onafhankelijk van de Mac host
-          npm install
-
-      - name: 🧪 4. Run Refinery Machine (Tests)
-        # De 'zwarte doos' voert nu uit wat de app heeft geconfigureerd
+      - name: 🧪 4. Run Refinery Machine
         run: ${{ env.TEST_EXEC_CMD }}
 
-      - name: 📤 5. Export Results (Artifacts)
+      - name: 📤 5. Export Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
