@@ -40,9 +40,9 @@ jobs:
         run: npm install
 
       - name: 🧪 Run Jest Unit Tests
-        # Alle configuratie (rootDir, testMatch, coverage) wordt uit package.json gehaald.
-        # We wijzen direct naar het juiste bestand en dwingen coverage af
-        run: npx jest tests/unit_weather.test.js --coverage --coverageReporters="lcov" --watchAll=false
+        # We gebruiken --testPathPattern in plaats van een direct pad
+        # Dit is veel robuuster op self-hosted runners
+        run: npx jest --testPathPattern="tests/.*\.test\.js" --coverage --coverageReporters="lcov" --watchAll=false
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
