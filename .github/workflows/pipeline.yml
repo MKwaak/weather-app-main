@@ -18,6 +18,9 @@ jobs:
   # --- STAGE 0: REFINERY INTAKE (Versioning) ---
   versioning:
     runs-on: ubuntu-latest
+    # Voeg dit blok toe:
+    permissions:
+      contents: write
     outputs:
       new_version: ${{ steps.bump.outputs.new_version }}
     steps:
