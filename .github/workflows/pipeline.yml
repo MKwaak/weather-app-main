@@ -32,6 +32,9 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: true
+          fetch-depth: 0
 
       - name: 📦 Install Dependencies
         run: npm install
@@ -80,19 +83,17 @@ jobs:
         id: versioning
         run: |
           VERSION_FILE="VERSION"
-          CURRENT_VERSION=$(cat $VERSION_FILE 2>/dev/null || echo "2.2.0")
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          if [[ "$COMMIT_MSG" == *"#minor"* ]]; then
-            MINOR=$((MINOR + 1)); PATCH=0
-          else
-            PATCH=$((PATCH + 1))
-          fi
-          SEMVER="${MAJOR}.${MINOR}.${PATCH}"
+          # Pak alleen de 2.2 uit het bestand
+          BASE_VERSION=$(cat $VERSION_FILE | cut -d'.' -f1,2)
+
+          # Gebruik het unieke GitHub Run Nummer (bijv. 37) voor de PATCH
+          SEMVER="${BASE_VERSION}.${{ github.run_number }}"
+
           echo "$SEMVER" > $VERSION_FILE
+          # Mac-safe sed
           sed -i.bak "s/{{VERSION}}/${SEMVER}/g" index.html && rm index.html.bak
+
           echo "version=$SEMVER" >> $GITHUB_OUTPUT
-          # Forceer dat de variabele ook in de huidige shell beschikbaar is
           echo "Berekende versie: $SEMVER"
 
       - name: 🔍 SonarCloud Scan
