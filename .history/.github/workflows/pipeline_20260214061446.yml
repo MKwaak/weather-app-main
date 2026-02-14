@@ -75,12 +75,9 @@ jobs:
       - name: 🛠️ Fix LCOV paths for SonarCloud
         # We passen het bestand aan NA het downloaden, maar VOOR de scan.
         run: |
-          # We strippen alles weg tot en met de laatste slash voor de bestandsnaam
-          # Dit verandert SF:/Users/marcel/.../script.js naar SF:script.js
-          sed -i '' 's|SF:.*[/\]|SF:|g' coverage/lcov.info
-
-          echo "--- Controle van gefixte paden ---"
-          grep "SF:" coverage/lcov.info | head -n 5
+          sed -i '' "s|SF:.*/weather-app-main/|SF:|g" coverage/lcov.info
+          echo "Controle van de aangepaste paden:"
+          head -n 5 coverage/lcov.info
 
       - name: 🏷️ Versioning & HTML Inject
         id: versioning
