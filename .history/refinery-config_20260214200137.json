@@ -1,0 +1,6 @@
+{
+  "projectType": "nodejs",
+  "testCommand": "npm test -- --coverage --coverageReporters='lcov' --coverageReporters='text' --watchAll=false",
+  "sonarProjectKey": "weather-app-main",
+  "coveragePath": "coverage/lcov.info"
+}

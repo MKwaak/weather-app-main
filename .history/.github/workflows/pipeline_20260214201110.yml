@@ -1,0 +1,306 @@
+name: Weather App Master Framework (Modular v3.0)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      override_reason:
+        description: "Reden voor handmatige goedkeuring"
+        required: false
+        default: ""
+      run_perf:
+        description: "Voer k6 Performance Benchmark uit?"
+        type: boolean
+        default: true
+      run_load:
+        description: "Voer k6 Load Test uit?"
+        type: boolean
+        default: false
+      run_chaos:
+        description: "Voer Chaos Resilience Test uit?"
+        type: boolean
+        default: false
+
+env:
+  APP_PORT: "57974"
+  TEST_URL: "http://localhost:57974"
+
+jobs:
+  # --- STAGE 1: CI (De Universele Machine) ---
+  unit-tests:
+    runs-on: self-hosted
+    # Gebruik een specifieke container om de 'Mac-vloek' te omzeilen
+    container:
+      image: node:20-bullseye
+
+    steps:
+      - name: 📂 1. Checkout App Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ 2. Validate & Read Refinery Config
+        id: config
+        run: |
+          if [ ! -f refinery-config.json ]; then
+            echo "❌ FOUT: refinery-config.json niet gevonden in de app-root!"
+            exit 1
+          fi
+
+          # Haal de commando's en paden op uit de configuratie
+          TEST_CMD=$(node -p "require('./refinery-config.json').testCommand")
+          COV_PATH=$(node -p "require('./refinery-config.json').coveragePath || 'coverage/lcov.info'")
+
+          echo "TEST_EXEC_CMD=$TEST_CMD" >> $GITHUB_ENV
+          echo "COVERAGE_RESULT_PATH=$COV_PATH" >> $GITHUB_ENV
+
+          echo "✅ Config geladen: $TEST_CMD"
+
+      - name: 📦 3. Setup Environment (Install)
+        run: |
+          # We doen dit in de container, onafhankelijk van de Mac host
+          npm install
+
+      - name: 🧪 4. Run Refinery Machine (Tests)
+        # De 'zwarte doos' voert nu uit wat de app heeft geconfigureerd
+        run: ${{ env.TEST_EXEC_CMD }}
+
+      - name: 📤 5. Export Results (Artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: ${{ env.COVERAGE_RESULT_PATH }}
+
+  scan-build-and-push:
+    needs: unit-tests
+    runs-on: self-hosted
+    outputs:
+      deploy_ver: ${{ steps.versioning.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Belangrijk voor SonarCloud analyse
+
+      - name: 🧹 Clean workspace
+        run: |
+          rm -rf coverage/
+          mkdir -p coverage/
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Gebruik een stabiele LTS versie
+
+      - name: 📥 Download Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: coverage # Dit zet het bestand in de 'coverage' map
+
+      - name: 🛠️ Fix LCOV paths for SonarCloud
+        # We passen het bestand aan NA het downloaden, maar VOOR de scan.
+        run: |
+          echo "DEBUG: Inhoud van coverage map:"
+          ls -lh coverage/
+
+          # 1. Check of het bestand bestaat en inhoud heeft
+          if [ ! -s coverage/lcov.info ]; then
+            echo "❌ ERROR: lcov.info is leeg of bestaat niet!"
+            exit 1
+          fi
+
+          # 2. Gebruik een Mac-vriendelijke sed met een simpeler patroon
+          # We vangen de output eerst op in een tijdelijk bestand om fouten te voorkomen
+          sed 's|SF:.*/|SF:|g' coverage/lcov.info > coverage/lcov_fixed.info
+          mv coverage/lcov_fixed.info coverage/lcov.info
+
+          echo "--- Controle van gefixte paden ---"
+          grep "SF:" coverage/lcov.info | head -n 5 || echo "❌ Nog steeds geen SF regels gevonden!"
+
+      - name: 🏷️ Versioning & HTML Inject
+        id: versioning
+        run: |
+          VERSION_FILE="VERSION"
+          # Pak alleen de 2.2 uit het bestand
+          BASE_VERSION=$(cat $VERSION_FILE | cut -d'.' -f1,2)
+
+          # Gebruik het unieke GitHub Run Nummer (bijv. 37) voor de PATCH
+          SEMVER="${BASE_VERSION}.${{ github.run_number }}"
+
+          echo "$SEMVER" > $VERSION_FILE
+          # Mac-safe sed
+          sed -i.bak "s/{{VERSION}}/${SEMVER}/g" index.html && rm index.html.bak
+
+          echo "version=$SEMVER" >> $GITHUB_OUTPUT
+          echo "Berekende versie: $SEMVER"
+
+      - name: 🔍 SonarCloud Scan
+        # We gebruiken hier sonarcloud-github-action, de officiële voor SonarCloud
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=MKwaak_weather-app-main
+            -Dsonar.organization=mkwaak
+            -Dsonar.projectVersion=${{ steps.versioning.outputs.version }}
+            -Dsonar.sources=.
+            -Dsonar.projectBaseDir=.
+            -Dsonar.exclusions=tests/**,**/node_modules/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.working.directory=.scannerwork
+            -Dsonar.verbose=true
+
+      - name: 🐳 Build & Push Docker Image
+        run: |
+          VERSION=${{ steps.versioning.outputs.version }}
+          docker build --build-arg APP_VERSION=$VERSION -t mkwaak/weather-app-main:$VERSION .
+          docker push mkwaak/weather-app-main:$VERSION
+
+  # --- STAGE 2: SECURITY & DEPLOY ---
+  security-scan:
+    needs: scan-build-and-push
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🛡️ Trivy Scan
+        run: |
+          mkdir -p tests
+          trivy image --severity HIGH,CRITICAL --format json --output tests/security_results.json mkwaak/weather-app-main:${{ needs.scan-build-and-push.outputs.deploy_ver }}
+      - name: 📤 Upload Security Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: tests/security_results.json
+
+  deploy:
+    needs: scan-build-and-push
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: ☸️ K8s Deploy & Update
+        run: |
+          VERSION=${{ needs.scan-build-and-push.outputs.deploy_ver }}
+          sed -i.bak "s|mkwaak/weather-app-main:.*|mkwaak/weather-app-main:$VERSION|g" deployment.yaml
+          kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/weather-app-deployment
+
+  # --- STAGE 3: HET TEST-LAB (Parallel) ---
+  entry-and-functional:
+    needs: deploy
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🚪 Entry Check
+        run: |
+          mkdir -p tests
+          sleep 10
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT/ || echo "000")
+          if [ "$STATUS" == "200" ]; then
+            echo "{\"score\": 100, \"detail\": \"App up on port $APP_PORT\"}" > tests/entry_results.json
+          else
+            echo "{\"score\": 0, \"detail\": \"App unreachable (Status: $STATUS)\"}" > tests/entry_results.json
+          fi
+      - name: 🔍 Functional Pytest
+        run: |
+          export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
+          pytest tests/test_entry.py || true
+          python3 tests/location_test.py --url $TEST_URL --output tests/accuracy_results.json
+      - name: 📤 Upload Entry Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: entry-results
+          path: tests/*.json
+
+  performance-benchmark:
+    needs: entry-and-functional
+    if: github.event.inputs.run_perf == 'true' || github.event_name == 'push'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: ⚡ k6 Benchmark
+        run: |
+          mkdir -p tests
+          export PATH="$PATH:/usr/local/bin"
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
+      - name: 📤 Upload Perf Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: tests/perf_results.json
+
+  load-testing:
+    needs: entry-and-functional
+    if: github.event.inputs.run_load == 'true'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🏋️ k6 Load Test
+        run: |
+          mkdir -p tests
+          export PATH="$PATH:/usr/local/bin"
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/load_results.json tests/load_test.js || true
+      - name: 📤 Upload Load Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-report
+          path: tests/load_results.json
+
+  chaos-resilience:
+    needs: entry-and-functional
+    if: github.event.inputs.run_chaos == 'true'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🌪️ Chaos Test
+        run: |
+          mkdir -p tests
+          export PATH="$PATH:/usr/local/bin"
+          k6 run -e TEST_URL=$TEST_URL --summary-export=tests/chaos_results.json tests/load_test.js &
+          K6_PID=$!
+          sleep 20
+          kubectl delete pod -l app=weather-app --now
+          wait $K6_PID || true
+      - name: 📤 Upload Chaos Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos-report
+          path: tests/chaos_results.json
+
+  # --- STAGE 4: DE JUDGE ---
+  quality-gate:
+    needs:
+      [
+        unit-tests,
+        scan-build-and-push,
+        security-scan,
+        entry-and-functional,
+        performance-benchmark,
+        load-testing,
+        chaos-resilience,
+      ]
+    if: always()
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📂 Collect All Results (Modular)
+        uses: actions/download-artifact@v4
+        with:
+          path: tests/
+          # We downloaden nu ALLES wat we in eerdere jobs hebben geüpload
+          merge-multiple: true
+
+      - name: 🏆 Final Quality Assessment
+        env:
+          # Deze drie moeten blijven voor een werkend dashboard!
+          APP_VERSION: ${{ needs.scan-build-and-push.outputs.deploy_ver }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          OVERRIDE_REASON: ${{ github.event.inputs.override_reason }}
+        run: |
+          # We zorgen dat de tests map bestaat en draaien de Judge
+          echo "DEBUG: Ontvangen versie is: $APP_VERSION"
+          python3 tests/calculate_score.py
