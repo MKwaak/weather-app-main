@@ -40,8 +40,9 @@ jobs:
         run: npm install
 
       - name: 🧪 Run Jest Unit Tests
-        # We gebruiken de volledige root-vlag en een simpelere match
-        run: npx jest --coverage --coverageReporters="lcov" --watchAll=false --rootDir . tests/unit_weather.test.js
+        # We gebruiken --testMatch om Jest te dwingen de runner-map te negeren
+        # We voegen ook --no-cache toe omdat Mac runners soms oude paden onthouden
+        run: npx jest --coverage --coverageReporters="lcov" --watchAll=false --testMatch="<rootDir>/tests/unit_weather.test.js" --no-cache
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
