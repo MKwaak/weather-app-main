@@ -3,59 +3,41 @@ import json
 import requests
 import sys
 
-def get_config():
-    """Leest de refinery-config.json uit voor universele variabelen."""
-    config_path = "refinery-config.json"
-    if os.path.exists(config_path):
-        try:
-            with open(config_path, 'r') as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
-
 def get_sonar_metrics():
     token = os.getenv("SONAR_TOKEN")
-    config = get_config()
-    
-    # Prioriteit: Environment Variable -> Config File -> Default
-    project_key = os.getenv("SONAR_PROJECT_KEY") or config.get("sonarProjectKey", "MKwaak_weather-app-main")
-    
+    project_key = os.getenv("SONAR_PROJECT_KEY", "MKwaak_weather-app-main")
+    # We vragen nu specifiek om de 'coverage' en 'bugs' metrics
     url = f"https://sonarcloud.io/api/measures/component?component={project_key}&metricKeys=coverage,bugs,vulnerabilities"
     
     try:
         response = requests.get(url, auth=(token, "") if token else None, timeout=10)
-        if response.status_code != 200:
-            return 0, f"Sonar Error ({response.status_code})"
-            
         data = response.json()
+        # Haal de waarde uit de lijst met measures
         measures = {m['metric']: m['value'] for m in data['component']['measures']}
         
         coverage = float(measures.get('coverage', 0))
         bugs = int(measures.get('bugs', 0))
+        vulns = int(measures.get('vulnerabilities', 0))
         
-        # De naakte waarheid: De score IS de coverage, min strafpunten voor bugs
+        # De naakte waarheid score: coverage is de basis, min strafpunten voor bugs
         score = max(0, coverage - (bugs * 2)) 
-        return round(score, 1), f"{coverage}% (Bugs: {bugs})"
+        return score, f"{coverage}% (Bugs: {bugs})"
     except Exception as e:
-        return 0, f"API Offline/Error"
+        return 0, f"API Error: {str(e)}"
 
 def calculate():
-    config = get_config() # Leest de JSON
-    app_name = config.get("appName", "App Under Test") # Pakt de naam, of default
     version = os.getenv("APP_VERSION", "0.0.0-unknown")
     override_reason = os.getenv("OVERRIDE_REASON", "")
     
-    # Gebruik de app naam uit config of default
-    app_name = config.get("appName", "QaaS REFINERY")
-    
+    # De 8 Pilaren (Unit Testing toegevoegd)
+    # De volgorde hier bepaalt de weergave op je dashboard
     pillars = [
         ("Entry Check", "entry"),
         ("Unit Testing", "unit"),
         ("Code Quality", "sonar"),
         ("Functionality", "accuracy"),
         ("Security Scan", "security"),
-        ("Performance", "perf"),
+        ("Performance", "perf"),      # Gematcht met nieuwe bestandsnaam
         ("Load Stability", "load"),
         ("Chaos Resilience", "chaos")
     ]
@@ -63,29 +45,33 @@ def calculate():
     results = {}
 
     for name, prefix in pillars:
-        # SonarCloud Integration
+        # Speciale case 1: SonarCloud
         if name == "Code Quality":
-            score, detail = get_sonar_metrics()
-            results[name] = {"score": score, "detail": detail, "skipped": score == 0}
+            score, detail = get_sonar_metrics() # De nieuwe functie aanroepen
+            results[name] = {
+                "score": score, 
+                "detail": detail, 
+                "skipped": False if score > 0 else True
+            }
             continue
 
-        # Unit Testing (Jest lcov check)
+        # Speciale case 2: Unit Testing (kijkt naar aanwezigheid lcov data)
         if name == "Unit Testing":
-            # We kijken of de coverage file bestaat als bewijs van draaiende tests
-            coverage_file = config.get("coveragePath", "tests/lcov.info")
-            if os.path.exists(coverage_file) or os.path.exists("coverage/lcov.info"):
+            coverage_file = "tests/lcov.info"
+            if os.path.exists(coverage_file):
+                # Omdat de test-job is geslaagd geven we 100
                 results[name] = {"score": 100, "detail": "Jest Passed", "skipped": False}
             else:
                 results[name] = {"score": 0, "detail": "No Data", "skipped": True}
             continue
 
-        # Standaard JSON resultaten verwerking
+        # Standaard: Zoek naar JSON resultaten
         file_path = f"tests/{prefix}_results.json"
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r') as f:
                     data = json.load(f)
-                    score = float(data.get('score', 0))
+                    score = data.get('score', 0)
                     
                     if prefix == 'entry':
                         detail = data.get('detail', 'App Up')
@@ -100,13 +86,15 @@ def calculate():
                         detail = f"Score: {score}%"
                     
                     results[name] = {"score": score, "detail": detail, "skipped": False}
-            except:
+            except Exception:
                 results[name] = {"score": 0, "detail": "Format error", "skipped": True}
         else:
             results[name] = {"score": 0, "detail": "Skipped", "skipped": True}
 
-    # Berekeningen
-    active_cqi = [results[n]["score"] for n in ["Entry Check", "Unit Testing", "Code Quality", "Functionality", "Security Scan"] if not results[n]["skipped"]]
+    # Slimme weging: Alleen berekenen op basis van wat NIET geskipt is
+    # Dit voorkomt dat je RQI instort naar 38% bij het skippen van chaos tests
+    cqi_names = ["Entry Check", "Unit Testing", "Code Quality", "Functionality", "Security Scan"]
+    active_cqi = [results[n]["score"] for n in cqi_names if not results[n]["skipped"]]
     cqi_score = sum(active_cqi) / len(active_cqi) if active_cqi else 0
     
     active_rqi = [results[n]["score"] for n, _ in pillars if not results[n]["skipped"]]
@@ -114,7 +102,7 @@ def calculate():
 
     # Dashboard Rendering
     print("\n" + "="*60)
-    print(f" 🚀 {app_name} | VERSION: {version}")
+    print(f" 🚀 QaaS - QUALITY DASHBOARD | VERSION: {version}")
     if override_reason:
         print(f" 🟦 STAKEHOLDER OVERRIDE: {override_reason}")
     print("="*60)
@@ -124,14 +112,43 @@ def calculate():
 
     for name, _ in pillars:
         res = results[name]
-        emoji = "⚪" if res["skipped"] else ("🟢" if res["score"] >= 80 else ("🟡" if res["score"] >= 50 else "🔴"))
-        print(f"{emoji} {name:<20} : {res['score']:>5.1f}/100 ({res['detail']})")
+        if res["skipped"]:
+            emoji = "⚪"
+        elif res["score"] >= 90:
+            emoji = "🟢"
+        elif res["score"] >= 70:
+            emoji = "🟡"
+        else:
+            emoji = "🔴"
+        print(f"{emoji} {name:<20} : {res['score']:>3}/100 ({res['detail']})")
     
     print("="*60)
+
+    # De Quality Gate beslissing
     threshold = 80.0
-    status = "PASSED" if (rqi_score >= threshold or override_reason) else "FAILED"
-    print(f" {'✅' if status == 'PASSED' else '❌'} STATUS: {status} " + (f"(RQI below {threshold}%)" if status == "FAILED" else ""))
+    is_passed = rqi_score >= threshold
+
+    if override_reason:
+        print(f" ✅ STATUS: PASSED BY OVERRIDE")
+    elif is_passed:
+        print(f" ✅ STATUS: PASSED")
+    else:
+        print(f" ❌ STATUS: FAILED (RQI below {threshold}%)")
     print("="*60 + "\n")
+    
+    # Rest van de historie logica blijft gelijk...
+
+    # 7. Historie Loggen
+    try:
+        with open("quality_history.csv", "a") as f:
+            f.write(f"{version},{cqi_score:.1f},{rqi_score:.1f},{final_status},\"{override_reason}\"\n")
+    except:
+        pass
+
+    # Exit code voor de pipeline
+    if not is_passed and not override_reason:
+        # sys.exit(1) # Optioneel: zet dit aan om de pipeline echt te laten falen
+        pass
 
 if __name__ == "__main__":
     calculate()

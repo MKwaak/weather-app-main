@@ -98,6 +98,8 @@ jobs:
         run: |
           SONAR_KEY=$(node -p "require('./refinery-config.json').sonarProjectKey")
           echo "SONAR_KEY=$SONAR_KEY" >> $GITHUB_ENV
+
+          # HTML Injectie
           VERSION=${{ needs.versioning.outputs.new_version }}
           sed -i.bak "s/{{VERSION}}/${VERSION}/g" index.html && rm index.html.bak
 
@@ -108,10 +110,12 @@ jobs:
           path: coverage
 
       - name: 🛠️ Fix Paden voor Sonar
-        run: sed -i.bak 's|SF:.*/|SF:|g' coverage/lcov.info
+        run: |
+          # Zorgt dat Sonar de Linux-paden uit de container snapt op de Mac
+          sed -i.bak 's|SF:.*/|SF:|g' coverage/lcov.info
 
-      - name: 🔍 SonarCloud Scan (V5.0.0 - State of the Art)
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
+      - name: 🔍 SonarCloud Scan (Universal)
+        uses: SonarSource/sonarqube-scan-action@v5.0.0 # <--- De moderne versie
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -211,15 +215,9 @@ jobs:
         with:
           path: tests/
           merge-multiple: true
-
-      - name: ⏳ Wait for SonarCloud Processing
-        # We geven SonarCloud 20 seconden om de Task ID te verwerken
-        run: sleep 20
-
       - name: 🏆 Final Quality Assessment
         env:
           APP_VERSION: ${{ needs.versioning.outputs.new_version }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # We geven de Sonar Key ook mee aan de Judge voor de zekerheid
-          SONAR_PROJECT_KEY: "MKwaak_weather-app-main"
-        run: python3 tests/calculate_score.py
+        run: |
+          python3 tests/calculate_score.py

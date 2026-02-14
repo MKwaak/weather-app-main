@@ -41,8 +41,7 @@ def get_sonar_metrics():
         return 0, f"API Offline/Error"
 
 def calculate():
-    config = get_config() # Leest de JSON
-    app_name = config.get("appName", "App Under Test") # Pakt de naam, of default
+    config = get_config()
     version = os.getenv("APP_VERSION", "0.0.0-unknown")
     override_reason = os.getenv("OVERRIDE_REASON", "")
     
