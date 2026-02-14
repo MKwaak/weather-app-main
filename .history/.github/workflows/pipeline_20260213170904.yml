@@ -92,8 +92,6 @@ jobs:
           echo "$SEMVER" > $VERSION_FILE
           sed -i.bak "s/{{VERSION}}/${SEMVER}/g" index.html && rm index.html.bak
           echo "version=$SEMVER" >> $GITHUB_OUTPUT
-          # Forceer dat de variabele ook in de huidige shell beschikbaar is
-          echo "Berekende versie: $SEMVER"
 
       - name: 🔍 SonarCloud Scan
         # We gebruiken hier sonarcloud-github-action, de officiële voor SonarCloud
