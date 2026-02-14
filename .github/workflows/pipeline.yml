@@ -41,8 +41,8 @@ jobs:
 
       - name: 🧪 Run Jest Unit Tests
         # Alle configuratie (rootDir, testMatch, coverage) wordt uit package.json gehaald.
-        # We voegen expliciet de vlaggen toe om coverage te genereren
-        run: npm test -- --coverage --coverageReporters="lcov" --watchAll=false
+        # We wijzen direct naar het juiste bestand en dwingen coverage af
+        run: npx jest tests/unit_weather.test.js --coverage --coverageReporters="lcov" --watchAll=false
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
