@@ -27,31 +27,51 @@ env:
   TEST_URL: "http://localhost:57974"
 
 jobs:
-  # --- STAGE 1: CI (Kwaliteit aan de bron) ---
+  # --- STAGE 1: CI (De Universele Machine) ---
   unit-tests:
     runs-on: self-hosted
+    # Gebruik een specifieke container om de 'Mac-vloek' te omzeilen
+    container:
+      image: node:20-bullseye
+
     steps:
-      - uses: actions/checkout@v4
+      - name: 📂 1. Checkout App Code
+        uses: actions/checkout@v4
         with:
-          clean: true
           fetch-depth: 0
 
-      - name: 📦 Install Dependencies
-        run: npm install
-
-      - name: 🧪 Run Jest Unit Tests
+      - name: ⚙️ 2. Validate & Read Refinery Config
+        id: config
         run: |
-          # We bepalen het exacte pad op de Mac en voeren dat direct aan Jest
-          TEST_FILE=$(find $(pwd)/tests -name "unit_weather.test.js")
-          echo "Draaien van test op: $TEST_FILE"
-          npx jest $TEST_FILE --coverage --coverageReporters="lcov" --coverageReporters="text" --watchAll=false
+          if [ ! -f refinery-config.json ]; then
+            echo "❌ FOUT: refinery-config.json niet gevonden in de app-root!"
+            exit 1
+          fi
 
-      - name: 📤 Upload Coverage
-        if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
+          # Haal de commando's en paden op uit de configuratie
+          TEST_CMD=$(node -p "require('./refinery-config.json').testCommand")
+          COV_PATH=$(node -p "require('./refinery-config.json').coveragePath || 'coverage/lcov.info'")
+
+          echo "TEST_EXEC_CMD=$TEST_CMD" >> $GITHUB_ENV
+          echo "COVERAGE_RESULT_PATH=$COV_PATH" >> $GITHUB_ENV
+
+          echo "✅ Config geladen: $TEST_CMD"
+
+      - name: 📦 3. Setup Environment (Install)
+        run: |
+          # We doen dit in de container, onafhankelijk van de Mac host
+          npm install
+
+      - name: 🧪 4. Run Refinery Machine (Tests)
+        # De 'zwarte doos' voert nu uit wat de app heeft geconfigureerd
+        run: ${{ env.TEST_EXEC_CMD }}
+
+      - name: 📤 5. Export Results (Artifacts)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: unit-test-coverage
-          path: coverage/lcov.info
+          path: ${{ env.COVERAGE_RESULT_PATH }}
 
   scan-build-and-push:
     needs: unit-tests
