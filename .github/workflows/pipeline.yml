@@ -40,9 +40,8 @@ jobs:
         run: npm install
 
       - name: 🧪 Run Jest Unit Tests
-        # We gebruiken --testPathPattern in plaats van een direct pad
-        # We zoeken simpelweg op de bestandsnaam zelf.
-        run: npx jest unit_weather.test.js --coverage --coverageReporters="lcov" --watchAll=false
+        # We gebruiken de volledige root-vlag en een simpelere match
+        run: npx jest --coverage --coverageReporters="lcov" --watchAll=false --rootDir . tests/unit_weather.test.js
 
       - name: 📤 Upload Coverage
         if: always() # Zorg dat we altijd proberen te uploaden, ook bij een (gedeeltelijke) fail
