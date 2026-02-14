@@ -61,6 +61,11 @@ jobs:
         with:
           fetch-depth: 0 # Belangrijk voor SonarCloud analyse
 
+      - name: 🧹 Clean workspace
+        run: |
+          rm -rf coverage/
+          mkdir -p coverage/
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
