@@ -25,7 +25,7 @@ function selectLocation(result) {
     (r) =>
       r.address &&
       r.address.country_code &&
-      priorityCountryCodes.has(r.address.country_code.toLowerCase()),
+      priorityCountryCodes.includes(r.address.country_code.toLowerCase()),
   );
   return euSelected || result[0];
 }

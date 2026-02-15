@@ -130,13 +130,11 @@ jobs:
             -Dsonar.projectKey=${{ env.SONAR_KEY }}
             -Dsonar.organization=mkwaak
             -Dsonar.projectVersion=${{ needs.versioning.outputs.new_version }}
-            -Dsonar.projectBaseDir=.
             -Dsonar.sources=.
             -Dsonar.tests=tests
-            -Dsonar.inclusions=script.js,app.js
-            -Dsonar.exclusions=**/.history/**,**/node_modules/**,coverage/**
+            -Dsonar.inclusions=script.js,app.js,src/**
+            -Dsonar.exclusions=**/node_modules/**,tests/**,*.yaml,*.json
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.scm.disabled=true
 
       - name: 🐳 Build & Push Docker Image
         run: |
