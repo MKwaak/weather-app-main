@@ -112,8 +112,6 @@ jobs:
         run: |
           sed -i.bak 's|SF:/github/workspace/|SF:|g' coverage/lcov.info || true
           sed -i.bak 's|SF:.*/weather-app-main/|SF:|g' coverage/lcov.info || true
-          echo "--- DEBUG: Eerste 5 regels van gefixte lcov.info ---"
-          head -n 5 coverage/lcov.info
 
       - name: 🔍 SonarCloud Scan (V5.0.0 - State of the Art)
         uses: SonarSource/sonarqube-scan-action@v5.0.0

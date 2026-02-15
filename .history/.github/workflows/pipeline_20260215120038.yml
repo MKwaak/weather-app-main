@@ -101,19 +101,14 @@ jobs:
           VERSION=${{ needs.versioning.outputs.new_version }}
           sed -i.bak "s/{{VERSION}}/${VERSION}/g" index.html && rm index.html.bak
 
-      - name: 📥 Download Coverage for Sonar
+      - name: 📥 Download & Fix Coverage
         uses: actions/download-artifact@v4
         with:
           name: unit-test-coverage
-          path: coverage/ # Sonar zoekt vaak in de map 'coverage'
+          path: coverage
 
-      - name: 🛠️ Fix Paden voor Sonar (Relative Paths)
-        # We veranderen absolute paden naar relatieve paden t.o.v. de project root
-        run: |
-          sed -i.bak 's|SF:/github/workspace/|SF:|g' coverage/lcov.info || true
-          sed -i.bak 's|SF:.*/weather-app-main/|SF:|g' coverage/lcov.info || true
-          echo "--- DEBUG: Eerste 5 regels van gefixte lcov.info ---"
-          head -n 5 coverage/lcov.info
+      - name: 🛠️ Fix Paden voor Sonar
+        run: sed -i.bak 's|SF:.*/|SF:|g' coverage/lcov.info
 
       - name: 🔍 SonarCloud Scan (V5.0.0 - State of the Art)
         uses: SonarSource/sonarqube-scan-action@v5.0.0
@@ -208,18 +203,22 @@ jobs:
         entry-and-functional,
         performance-benchmark,
       ]
-
     if: always()
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - name: 📥 Collect All Refinery Data
+      - name: 📂 Collect Results
         uses: actions/download-artifact@v4
         with:
-          # We downloaden alles in één keer.
-          # GitHub pakt alle artifacts van deze run en legt de bestanden in tests/
           path: tests/
           merge-multiple: true
+
+      - name: 📥 Download Unit Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          # Hier dwingen we het bestand in de 'tests/' map
+          path: tests/
 
       - name: ⏳ Wait for SonarCloud Processing
         # We geven SonarCloud 20 seconden om de Task ID te verwerken
