@@ -244,9 +244,9 @@ jobs:
           find . -name "perf_results.json"
           echo "==========================================="
 
-      - name: ⏳ Mandatory Buffer for SonarCloud v1.1.14
+      - name: ⏳ Wait for SonarCloud Processing
         # We geven SonarCloud 30 seconden om de Task ID te verwerken
-        run: sleep 45
+        run: sleep 30
 
       - name: 🏆 Final Quality Assessment
         env:
