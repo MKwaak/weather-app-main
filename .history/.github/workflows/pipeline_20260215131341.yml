@@ -177,14 +177,12 @@ jobs:
           mkdir -p tests
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$APP_PORT/ || echo "000")
           echo "{\"score\": $( [ "$STATUS" == "200" ] && echo 100 || echo 0 ), \"detail\": \"Status: $STATUS\"}" > tests/entry_results.json
-          # Zorg dat je Python path goed staat voor de test
           export PATH="$PATH:/Users/marcelkwakernaak/Library/Python/3.9/bin:/usr/local/bin"
           python3 tests/location_test.py --url $TEST_URL --output tests/accuracy_results.json
-      - name: 📤 Upload Entry & Functional Results
-        if: always()
+      - name: 📤 Upload Results
         uses: actions/upload-artifact@v4
         with:
-          name: entry-functional-results
+          name: entry-results
           path: tests/*.json
 
   performance-benchmark:
@@ -195,14 +193,19 @@ jobs:
       - name: ⚡ k6 Performance Benchmark
         run: |
           mkdir -p tests
-          # We draaien k6 en exporteren de resultaten naar de tests map
           k6 run -e TEST_URL=$TEST_URL --summary-export=tests/perf_results.json tests/performance_test.js || true
-      - name: 📤 Upload Performance Results
-        if: always()
+      - name: 📤 Upload Perf
         uses: actions/upload-artifact@v4
         with:
-          name: performance-results
+          name: perf-report
           path: tests/perf_results.json
+
+      - name: 📤 Archive Performance Results
+        if: always() # Zorg dat we dit ALTIJD doen, ook als de test faalt
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results # De naam van het pakketje
+          path: tests/perf_results.json # Het bestand dat we willen bewaren
 
   # --- STAGE 5: THE JUDGE ---
   quality-gate:
