@@ -5,6 +5,7 @@ import sys
 import time
 
 def get_config():
+    # Bepaal de naam op basis van de map of de GitHub repo
     folder_name = os.path.basename(os.getcwd())
     repo_name = os.getenv("GITHUB_REPOSITORY", "").split("/")[-1]
     app_id = repo_name if repo_name else folder_name
@@ -29,6 +30,7 @@ def get_sonar_metrics(config):
     project_key = os.getenv("SONAR_PROJECT_KEY") or config.get("sonarProjectKey")
     auth = (token, "") if token else None
 
+    # Task ID check voor verse data
     task_id = None
     report_path = ".scannerwork/report-task.txt"
     if os.path.exists(report_path):
@@ -38,13 +40,12 @@ def get_sonar_metrics(config):
                     task_id = line.split('=')[1].strip()
 
     if task_id:
-        print(f"⏳ Waiting for SonarCloud Task: {task_id}...")
+        print(f"⏳ Wachten op SonarCloud Task: {task_id}...")
         for _ in range(12): 
             try:
                 task_url = f"https://sonarcloud.io/api/ce/task?id={task_id}"
                 task_res = requests.get(task_url, auth=auth, timeout=10).json()
                 if task_res.get('task', {}).get('status') == 'SUCCESS':
-                    print("✅ SonarCloud Analysis Complete.")
                     break
             except:
                 pass
@@ -70,9 +71,9 @@ def get_sonar_metrics(config):
 def calculate():
     config = get_config()
     version = os.getenv("APP_VERSION", "0.0.0-unknown")
-    # GEBRUIK HIER DE NAAM UIT DE CONFIG
-    app_name = config.get("appName")
+    app_name = config.get("appName", "QaaS REFINERY")
     
+    # Deze lijst is de bron van waarheid voor je dashboard
     pillars = [
         ("Entry Check", "entry"),
         ("Unit Testing", "unit"),
@@ -87,15 +88,15 @@ def calculate():
     results = {}
 
     for name, prefix in pillars:
+        # Sonar en Unit blijven hetzelfde
         if name == "Code Quality":
-            # FIX: GEEF CONFIG MEE
-            score, detail = get_sonar_metrics(config)
+            score, detail = get_sonar_metrics()
             results[name] = {"score": score, "detail": detail, "skipped": False}
             continue
 
         if name == "Unit Testing":
-            # FIX: GEBRUIK DYNAMISCH PAD
-            if os.path.exists(config.get("coveragePath")):
+            coverage_file = config.get("coveragePath", "tests/lcov.info")
+            if os.path.exists(coverage_file):
                 results[name] = {"score": 100, "detail": "Jest Passed", "skipped": False}
             else:
                 results[name] = {"score": 0, "detail": "Missing lcov", "skipped": True}
@@ -103,6 +104,7 @@ def calculate():
 
         file_path = f"tests/{prefix}_results.json"
         
+        # Specifieke k6 parsing voor Performance
         if prefix == "perf" and os.path.exists(file_path):
             try:
                 with open(file_path, 'r') as f:
@@ -115,6 +117,7 @@ def calculate():
                 results[name] = {"score": 80.0, "detail": "Test OK (p95 hidden)", "skipped": False}
                 continue
 
+        # Standaard JSON afhandeling
         if os.path.exists(file_path):
             try:
                 with open(file_path, 'r') as f:
@@ -137,9 +140,11 @@ def calculate():
         else:
             results[name] = {"score": 0, "detail": "Skipped", "skipped": True}
 
+    # BEREKENING
     scored_values = [res["score"] for res in results.values() if not res["skipped"]]
     rqi_score = sum(scored_values) / len(scored_values) if scored_values else 0
 
+    # DASHBOARD
     print("\n" + "="*60)
     print(f" 🚀 {app_name} | VERSION: {version}")
     print("="*60)
