@@ -18,6 +18,7 @@ jobs:
   # --- STAGE 0: REFINERY INTAKE (Versioning) ---
   versioning:
     runs-on: ubuntu-latest
+    # Voeg dit blok toe:
     permissions:
       contents: write
     outputs:
@@ -29,20 +30,17 @@ jobs:
 
       - name: 🔢 Calculate Next Version
         id: bump
-        # Hier fixen we direct het SonarCloud security issue door de commit message in een env te zetten
-        env:
-          RAW_COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          # 1. Haal laatste tag op of start bij 1.0.0
+          # Haal laatste tag op of start bij 1.0.0
           LATEST_TAG=$(git tag --sort=-v:refname | head -n 1 | sed 's/v//')
           if [ -z "$LATEST_TAG" ]; then LATEST_TAG="1.0.0"; fi
 
           IFS='.' read -r major minor patch <<< "$LATEST_TAG"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
 
-          # 2. Gebruik de veilige env variabele
-          if [[ "$RAW_COMMIT_MSG" == *"#major"* ]]; then
+          if [[ "$COMMIT_MSG" == *"#major"* ]]; then
             NEW_VER="$((major + 1)).0.0"
-          elif [[ "$RAW_COMMIT_MSG" == *"#minor"* ]]; then
+          elif [[ "$COMMIT_MSG" == *"#minor"* ]]; then
             NEW_VER="${major}.$((minor + 1)).0"
           else
             NEW_VER="${major}.${minor}.$((patch + 1))"
@@ -132,9 +130,8 @@ jobs:
             -Dsonar.projectVersion=${{ needs.versioning.outputs.new_version }}
             -Dsonar.sources=.
             -Dsonar.tests=tests
-            -Dsonar.exclusions=tests/**,**/node_modules/**
-            -Dsonar.test.inclusions=tests/**/*.test.js,tests/**/*.spec.js
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.exclusions=tests/**,**/node_modules/**
 
       - name: 🐳 Build & Push Docker Image
         run: |
