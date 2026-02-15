@@ -17,6 +17,8 @@ def get_config():
 def get_sonar_metrics():
     token = os.getenv("SONAR_TOKEN")
     config = get_config()
+    
+    # Prioriteit: Environment Variable -> Config File -> Default
     project_key = os.getenv("SONAR_PROJECT_KEY") or config.get("sonarProjectKey", "MKwaak_weather-app-main")
     
     url = f"https://sonarcloud.io/api/measures/component?component={project_key}&metricKeys=coverage,bugs,vulnerabilities"
@@ -24,27 +26,19 @@ def get_sonar_metrics():
     try:
         response = requests.get(url, auth=(token, "") if token else None, timeout=10)
         if response.status_code != 200:
-            return 0, f"Sonar API Pending/Error ({response.status_code})"
+            return 0, f"Sonar Error ({response.status_code})"
             
         data = response.json()
-        # Soms stuurt Sonar een response zonder 'measures' als de eerste analyse nog loopt
-        if 'component' not in data or 'measures' not in data['component']:
-            return 20.0, "Waiting for initial Sonar calculation..." # Geef een basis-score ipv 0
-            
         measures = {m['metric']: m['value'] for m in data['component']['measures']}
         
         coverage = float(measures.get('coverage', 0))
         bugs = int(measures.get('bugs', 0))
         
-        # Als coverage 0 is, maar we weten dat de scan gelukt is, 
-        # geven we een tijdelijke score zodat de RQI niet instort
-        if coverage == 0:
-            return 40.0, f"Scan OK, Coverage Pending (Bugs: {bugs})"
-            
+        # De naakte waarheid: De score IS de coverage, min strafpunten voor bugs
         score = max(0, coverage - (bugs * 2)) 
         return round(score, 1), f"{coverage}% (Bugs: {bugs})"
     except Exception as e:
-        return 20.0, "Sonar API Offline"
+        return 0, f"API Offline/Error"
 
 def calculate():
     config = get_config() # Leest de JSON
